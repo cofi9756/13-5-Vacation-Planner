@@ -1,7 +1,7 @@
 INSERT INTO users 
-    (password, email, first_name, last_name, date_of_birth)
+    (username, password, email, first_name, last_name, date_of_birth)
 VALUES
-    ('defaultpassword', 'realemail@realemail.com', 'John', 'Smith', '2004-12-01');
+    ('bob', 'defaultpassword', 'realemail@realemail.com', 'John', 'Smith', '2004-12-01');
 
 INSERT INTO locations
     (location_name, preference_data)
