@@ -33,9 +33,7 @@ app.get('/register', (req, res) =>
 
 app.post('/register', async (req, res) => {
     try {
-        // Destructure the form data from req.body
         const { username, password, email, first_name, last_name, date_of_birth } = req.body;
-
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -44,7 +42,7 @@ app.post('/register', async (req, res) => {
             [username, hashedPassword, email, first_name, last_name, date_of_birth]
         );
 
-        res.redirect('/login'); // Redirect to the login page after register
+        res.redirect('/login');
     } 
     catch (error) {
         console.error('Error during registration:', error);
