@@ -24,6 +24,14 @@ CREATE TABLE events (
     FOREIGN KEY (locationid) REFERENCES locations(locationid)
 );
 
+CREATE TABLE images (
+    imageid SERIAL PRIMARY KEY NOT NULL,
+    eventid INT NOT NULL,
+    image_link VARCHAR(150),
+    image_desc VARCHAR(100),
+    FOREIGN KEY (eventid) REFERENCES locations(locationid)
+);
+
 CREATE TABLE saved_events (
     userid INT NOT NULL,
     eventid INT NOT NULL,

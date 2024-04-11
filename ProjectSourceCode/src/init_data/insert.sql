@@ -6,7 +6,7 @@ VALUES
 INSERT INTO locations
     (location_name, preference_data)
 VALUES
-    ('test location', 'bright, sunny, warm');
+    ('test location', ' bright, sunny, warm ');
 
 INSERT INTO events  
     (locationid, event_name, event_date, event_time, preference_data)
@@ -17,3 +17,8 @@ INSERT INTO saved_events
     (userid, eventid)
 VALUES
     (1, 1);
+
+INSERT INTO images
+    (eventid, image_link, image_desc)
+VALUES
+    (1, 'https://cc-prod.scene7.com/is/image/CCProdAuthor/What-is-Stock-Photography_P1_mobile?$pjpeg$&jpegSize=200&wid=720', 'dog with hat');
