@@ -119,6 +119,27 @@ app.post('/register', async (req, res) => {
   }
 });
 
+app.get('/events', (req, res) => {
+  const query = 'SELECT event_name, event_date, event_time, location_name, image_link FROM events e JOIN locations l ON e.locationid = l.locationid JOIN images i ON e.eventid = i.eventid;';
+
+
+  db.any(query)
+    .then(events => {
+      console.log(events);
+      res.render('pages/events', {
+        email: user.email,
+        events,
+      });
+    })
+    .catch(err => {
+      res.render('pages/events', {
+        email: user.email,
+        events: [],
+        error: true,
+      });
+    });
+});
+
 
 // POST register sql: INSERT INTO users (password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5) returning *;
 /*

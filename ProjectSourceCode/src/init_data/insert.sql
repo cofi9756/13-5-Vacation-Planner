@@ -1,24 +1,40 @@
-INSERT INTO users 
+INSERT INTO users
     (username, password, email, first_name, last_name, date_of_birth)
 VALUES
     ('bob', 'defaultpassword', 'realemail@realemail.com', 'John', 'Smith', '2004-12-01');
+
 
 INSERT INTO locations
     (location_name, preference_data)
 VALUES
     ('test location', ' bright, sunny, warm ');
 
+
 INSERT INTO events  
     (locationid, event_name, event_date, event_time, preference_data)
 VALUES  
-    (1, 'test event', '2004-12-01', '12:00:00', 'happy, bright, warm');
+    (1, 'test event', '2004-12-01', '12:00:00', ' happy, bright, warm ');
+
+
+INSERT INTO events  
+    (locationid, event_name, event_date, event_time, preference_data)
+VALUES  
+    (1, 'tes name part 2', '2004-11-01', '09:00:00', ' unhappy, dark, cold ');
+
 
 INSERT INTO saved_events
     (userid, eventid)
 VALUES
     (1, 1);
 
+
 INSERT INTO images
     (eventid, image_link, image_desc)
 VALUES
     (1, 'https://cc-prod.scene7.com/is/image/CCProdAuthor/What-is-Stock-Photography_P1_mobile?$pjpeg$&jpegSize=200&wid=720', 'dog with hat');
+
+
+INSERT INTO images
+    (eventid, image_link, image_desc)
+VALUES
+    (2, 'https://cdn.theatlantic.com/media/mt/science/cat_caviar.jpg', 'business cat');

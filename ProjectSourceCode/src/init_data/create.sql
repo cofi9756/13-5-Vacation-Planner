@@ -5,14 +5,16 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-    date_of_birth date 
+    date_of_birth date
 );
+
 
 CREATE TABLE locations (
     locationid SERIAL PRIMARY KEY NOT NULL,
     location_name VARCHAR(100) NOT NULL,
     preference_data VARCHAR(150)
 );
+
 
 CREATE TABLE events (
     eventid SERIAL PRIMARY KEY NOT NULL,
@@ -24,13 +26,15 @@ CREATE TABLE events (
     FOREIGN KEY (locationid) REFERENCES locations(locationid)
 );
 
+
 CREATE TABLE images (
     imageid SERIAL PRIMARY KEY NOT NULL,
     eventid INT NOT NULL,
     image_link VARCHAR(150),
     image_desc VARCHAR(100),
-    FOREIGN KEY (eventid) REFERENCES locations(locationid)
+    FOREIGN KEY (eventid) REFERENCES events(eventid)
 );
+
 
 CREATE TABLE saved_events (
     userid INT NOT NULL,
