@@ -1,6 +1,6 @@
 {
     "name": "nomad",
-    "main": "src/index.js",
+    "main": "src/index",
     "dependencies": {
       "express": "^4.6.1",
       "pg-promise": "^10.11.1",

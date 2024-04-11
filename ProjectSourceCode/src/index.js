@@ -79,8 +79,11 @@ app.get('/register', (req, res) =>
 });
 
 app.post('/register', async (req, res) => {
-  const { password, email, first_name, last_name, date_of_birth } = req.body;
+  const {username, password, email, first_name, last_name, date_of_birth } = req.body;
   let errors = []; // \S = any amount of characters that aren't a space or tab 
+  if(!username || username.length < 6) {
+      errors.push({ msg: "Username must be at least 6 characters long" });
+  }
   if (!email || !/\S+@\S+\.\S+/.test(email)) { //I think thats regexp code for valid emails
       errors.push({ msg: "Please enter a valid email address." });
   }
@@ -101,8 +104,8 @@ app.post('/register', async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       await db.none(
-          'INSERT INTO users (password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5)',
-          [hashedPassword, email, first_name, last_name, date_of_birth] //don't we also want username from db? 
+          'INSERT INTO users (username, `password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
+          [username, hashedPassword, email, first_name, last_name, date_of_birth] //don't we also want username from db? 
       );
 
       res.redirect('/login');
