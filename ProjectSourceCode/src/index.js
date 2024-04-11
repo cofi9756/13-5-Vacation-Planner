@@ -104,7 +104,7 @@ app.post('/register', async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       await db.none(
-          'INSERT INTO users (username, `password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
+          'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
           [username, hashedPassword, email, first_name, last_name, date_of_birth] //don't we also want username from db? 
       );
 
