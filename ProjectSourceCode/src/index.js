@@ -72,7 +72,38 @@ app.get('/welcome', (req, res) => { //Given test case in Lab11
 app.get('/login', (req, res) => {
     res.render('pages/login');
 });
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    
+      if (req.session) {
+          req.session.message = 'Username and password are required.';
+      }
+      return res.redirect('/login');
+  }
 
+  try {
+    
+      const user = await db.oneOrNone('SELECT username, email, first_name, last_name, password FROM users WHERE username = $1', [username]);
+
+      if (user && await bcrypt.compare(password, user.password)) {
+        
+          return res.redirect('/home');
+      } else {
+          
+          if (req.session) {
+              req.session.message = 'Invalid username or password.';
+          }
+          return res.redirect('/login');
+      }
+  } catch (error) {
+      console.error('Error during login:', error);
+      if (req.session) {
+          req.session.message = 'An error occurred, please try again.';
+      }
+      return res.redirect('/login');
+  }
+});
 app.get('/register', (req, res) => 
 {
     res.render('pages/register');
