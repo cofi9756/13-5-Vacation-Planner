@@ -28,5 +28,28 @@ describe('Server!', () => {
 });
 
 // *********************** TODO: WRITE 2 UNIT TESTCASES **************************
+//positive test case
+describe('Testing Render', () => {
 
+  it('test "/login" route should render with an html response', (done) => {
+    chai.request(server)
+      .get('/login') 
+      .end((err, res) => {
+        res.should.have.status(200); 
+        res.should.be.html; 
+      });
+  });
+});
+//negative test case
+describe('Testing Render', () => {
+
+  it('test "/login" route should not render with an html response', (done) => {
+    chai.request(server)
+      .get('pages/login') 
+      .end((err, res) => {
+        res.should.have.status(200); 
+        res.should.be.html; 
+      });
+  });
+});
 // ********************************************************************************
