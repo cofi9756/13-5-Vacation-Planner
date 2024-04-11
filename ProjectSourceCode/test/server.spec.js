@@ -28,27 +28,63 @@ describe('Server!', () => {
 });
 
 // *********************** TODO: WRITE 2 UNIT TESTCASES **************************
-//positive test case
+//Unit Tests for login
 describe('Testing Render', () => {
-
+  // Positive test case
   it('test "/login" route should render with an html response', (done) => {
     chai.request(server)
-      .get('/login') 
+      .get('/login')
       .end((err, res) => {
-        res.should.have.status(200); 
-        res.should.be.html; 
+        res.should.have.status(200);
+        res.should.be.html;
+        done();
+      });
+  });
+
+  // Negative test case
+  it('test "/non-existing-route" route should not render with an html response', (done) => {
+    chai.request(server)
+      .get('/non-existing-route')
+      .end((err, res) => {
+        res.should.not.have.status(200);
+        done();
       });
   });
 });
-//negative test case
-describe('Testing Render', () => {
-
-  it('test "/login" route should not render with an html response', (done) => {
+//Unit Tests for Register
+describe('Testing Register API', () => {
+  // Positive Test Case
+  it('should successfully register a new user and return a redirect to /login', (done) => {
     chai.request(server)
-      .get('pages/login') 
+      .post('/register')
+      .send({
+        email: 'adrian@gmail.com',
+        password: 'supercoolpassword',
+        first_name: 'Adrian',
+        last_name: 'Nica',
+        date_of_birth: '2003-08-29'
+      })
       .end((err, res) => {
-        res.should.have.status(200); 
-        res.should.be.html; 
+        expect(res).to.have.status(200);
+        done();
+      });
+  });
+
+  // Negative Test Case
+  it('should fail to register a new user with invalid email and return status 400', (done) => {
+    chai.request(server)
+      .post('/register')
+      .send({
+        email: 'invalid-email',
+        password: 'securepassword',
+        first_name: 'Thomas',
+        last_name: 'Garcia',
+        date_of_birth: '2003-05-04'
+      })
+      .end((err, res) => {
+        expect(res).to.have.status(400);
+        expect(res.body.errors[0].msg).to.equal('Please enter a valid email address.'); // Ensure your API responds with this message for invalid inputs
+        done();
       });
   });
 });
