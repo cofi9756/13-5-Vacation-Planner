@@ -1,5 +1,4 @@
 const express = require('express');
-const { engine } = require('express-handlebars');
 const app = express();
 const path = require('path');
 const bcrypt = require('bcrypt'); //Added for password protection
@@ -7,14 +6,8 @@ const saltRounds = 10; //Added for password protection
 const pgp = require('pg-promise')(); // To connect to the Postgres DB from the node server
 const handlebars = require('express-handlebars');
 const Handlebars = require('handlebars');
-
-app.engine('hbs', engine({
-    extname: '.hbs',
-    layoutsDir: __dirname + '/views/layouts',
-    partialsDir: __dirname + '/views/pages/partials',
-  }));
-  app.set('view engine', 'hbs');
-  app.set('views', path.join(__dirname, 'views'));
+const bodyParser = require('body-parser');
+const session = require('express-session');
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
@@ -44,6 +37,29 @@ db.connect()
     console.log('ERROR:', error.message || error);
   });
 
+
+//App Settings
+
+// Register `hbs` as our view engine using its bound `engine()` function.
+app.engine('hbs', hbs.engine);
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(bodyParser.json()); // specify the usage of JSON for parsing request body.
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    saveUninitialized: false,
+    resave: false,
+  })
+);
+
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
+// **API Routes**
 app.get('/', (req, res) => { 
    
     res.send('Hello, World!');
@@ -63,23 +79,44 @@ app.get('/register', (req, res) =>
 });
 
 app.post('/register', async (req, res) => {
-    try {
-        const { username, password, email, first_name, last_name, date_of_birth } = req.body;
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+  const { password, email, first_name, last_name, date_of_birth } = req.body;
+  let errors = []; // \S = any amount of characters that aren't a space or tab 
+  if (!email || !/\S+@\S+\.\S+/.test(email)) { //I think thats regexp code for valid emails
+      errors.push({ msg: "Please enter a valid email address." });
+  }
+  if (!password || password.length < 6) {
+      errors.push({ msg: "Password must be at least 6 characters long." });
+  }
+  if (!first_name) {
+      errors.push({ msg: "First name is required." });
+  }
+  if (!last_name) {
+      errors.push({ msg: "Last name is required." });
+  }
+  if (errors.length > 0) {
+      return res.status(400).json({ errors });
+  }
 
-        const result = await pool.query(
-            'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6) RETURNING userid',
-            [username, hashedPassword, email, first_name, last_name, date_of_birth]
-        );
+  try{
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        res.redirect('/login');
-    } 
-    catch (error) {
-        console.error('Error during registration:', error);
-        res.status(500).send('An error occurred during registration.');
-    }
+      await db.none(
+          'INSERT INTO users (password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5)',
+          [hashedPassword, email, first_name, last_name, date_of_birth] //don't we also want username from db? 
+      );
+
+      res.redirect('/login');
+  } 
+  catch (error){
+      console.error('Error during registration:', error);
+      if (req.session) {
+          req.session.message = 'Could not register, try again';
+      }
+      res.redirect('/register');
+  }
 });
+
+
 // POST register sql: INSERT INTO users (password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5) returning *;
 /*
 with this one i made dob optional on the database, if we want we can make a split post like in lab 6
