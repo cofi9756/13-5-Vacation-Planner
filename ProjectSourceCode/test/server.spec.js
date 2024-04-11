@@ -58,6 +58,7 @@ describe('Testing Register API', () => {
     chai.request(server)
       .post('/register')
       .send({
+        username: 'adriannica',
         email: 'adrian@gmail.com',
         password: 'supercoolpassword',
         first_name: 'Adrian',
@@ -75,6 +76,7 @@ describe('Testing Register API', () => {
     chai.request(server)
       .post('/register')
       .send({
+        username: 'thomasgarcia',
         email: 'invalid-email',
         password: 'securepassword',
         first_name: 'Thomas',
