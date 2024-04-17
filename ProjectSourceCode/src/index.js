@@ -37,7 +37,6 @@ db.connect()
     console.log('ERROR:', error.message || error);
   });
 
-
 //App Settings
 
 // Register `hbs` as our view engine using its bound `engine()` function.
@@ -59,6 +58,55 @@ app.use(
     extended: true,
   })
 );
+
+const user = {
+  userid: undefined,
+  username: undefined, 
+  email: undefined,
+  first_name: undefined,
+  last_name: undefined,
+  date_of_birth: undefined,
+};
+
+const saved_events = `
+SELECT DISTINCT
+e.eventid, 
+e.event_name, 
+e.event_desc, 
+to_char(e.event_date, \'DD Month YYYY\') AS event_date, 
+to_char(e.event_time, \'HH24:MI\') AS event_time, 
+co.country_name, 
+ci.city_name, 
+i.image_link, 
+i.image_desc, 
+u.userid = $1 AS saved 
+FROM events e 
+JOIN saved_events se ON e.eventid = se.eventid 
+JOIN users u ON se.userid = u.userid 
+JOIN countries co ON co.countryid = e.countryid 
+JOIN cities ci ON ci.countryid = co.countryid 
+JOIN images i ON e.eventid = i.eventid;`;
+
+const all_events = `
+SELECT 
+e.eventid, 
+e.event_name, 
+e.event_desc, 
+to_char(e.event_date, \'DD Month YYYY\') AS event_date, 
+to_char(e.event_time, \'HH24:MI\') AS event_time,
+co.country_name, 
+ci.city_name, 
+i.image_link, 
+i.image_desc,
+CASE 
+WHEN e.eventid IN (
+  SELECT se.eventid FROM saved_events se WHERE se.userid = $1) 
+THEN TRUE 
+ELSE FALSE 
+END AS saved 
+FROM events e JOIN countries co ON e.countryid = co.countryid JOIN cities ci ON co.countryid = ci.countryid JOIN images i ON i.eventid = e.eventid
+ORDER BY e.eventid ASC;`;
+
 // **API Routes**
 app.get('/', (req, res) => { 
    
@@ -84,11 +132,29 @@ app.post('/login', async (req, res) => {
 
   try {
     
-      const user = await db.oneOrNone('SELECT username, email, first_name, last_name, password FROM users WHERE username = $1', [username]);
+      const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
 
       if (user && await bcrypt.compare(password, user.password)) {
-        
-          return res.redirect('/home');
+        db.any('SELECT * FROM users WHERE username = $1', [username])  
+          .then(data => {
+            //currently not saving the users data outside of this function 
+            user.userid = data[0].userid;
+            user.username = username; 
+            user.email = data[0].email;
+            user.first_name = data[0].first_name;
+            user.last_name = data[0].last_name;
+            user.date_of_birth = data[0].date_of_birth;
+
+            req.session.user = user;
+            console.log(req.session.user);
+            req.session.save();
+          })
+          .catch(err => {
+            console.log("err saving user data");
+          });
+
+          //remeber to change this back to /home
+          return res.redirect('/events');
       } else {
           
           if (req.session) {
@@ -151,15 +217,34 @@ app.post('/register', async (req, res) => {
 });
 
 app.get('/events', (req, res) => {
-  const query = 'SELECT event_name, event_date, event_time, location_name, image_link FROM events e JOIN locations l ON e.locationid = l.locationid JOIN images i ON e.eventid = i.eventid;';
+  // const query = 'SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link, image_desc FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid;';
 
 
-  db.any(query)
-    .then(events => {
+  // db.any(query)
+  //   .then(events => {
+  //     console.log(events);
+  //     res.render('pages/events', {
+  //       email: user.email,
+  //       events,
+  //     });
+  //   })
+  //   .catch(err => {
+  //     res.render('pages/events', {
+  //       email: user.email,
+  //       events: [],
+  //       error: true,
+  //     });
+  //   });
+  const saved = req.query.saved;
+  console.log(user);
+  
+  db.any(saved ? saved_events : all_events, [user.userid])
+  .then(events => {
       console.log(events);
       res.render('pages/events', {
         email: user.email,
         events,
+        action: req.query.saved ? 'delete' : 'add',
       });
     })
     .catch(err => {
@@ -171,6 +256,112 @@ app.get('/events', (req, res) => {
     });
 });
 
+app.post('/events/add', (req, res) => {
+  const eventid = parseInt(req.body.eventid);
+  const query = 'INSERT INTO saved_events (userid, eventid) VALUES ($1, $2);';
+
+  db.tx(async t => {
+    await t.none(query, [user.userid, eventid]);
+    return t.any(all_events, [user.userid]);
+  })
+  .then(events => {
+    console.log(events);
+    res.render('pages/events', {
+      email: user.email,
+      events,
+      message: `Successfully added event!`,
+    });
+  })
+  .catch(err => {
+    res.render('pages/events', {
+      email: user.email,
+      events: [],
+      error: true,
+    });
+  });
+});
+
+app.get('/saved_events', (req, res) => {
+  const query = `
+  SELECT 
+  ev.eventid,
+  event_name, 
+  event_desc, 
+  to_char(event_date, \'DD Month YYYY\') AS event_date, 
+  to_char(event_time, \'HH24:MI\') AS event_time, 
+  country_name, 
+  city_name, 
+  image_link, 
+  image_desc,
+  to_char(date_saved, \'DD Month YYYY\') AS date_saved
+  FROM users us JOIN saved_events se ON us.userid = se.userid
+  JOIN events ev ON ev.eventid = se.eventid
+  JOIN countries co ON co.countryid = ev.countryid
+  JOIN cities ci ON ci.countryid = co.countryid
+  JOIN images im ON ev.eventid = im.eventid
+  WHERE se.userid = $1;`;
+
+  db.any(query, [user.userid])
+  .then(events => {
+    console.log(events);
+    res.render('pages/saved_events', {
+      email: user.email,
+      events,
+      first_name: user.first_name,
+    });
+  })
+  .catch(err => {
+    res.render('pages/saved_events', {
+      email: user.email,
+      events: [],
+      first_name: user.first_name,
+    });
+  });
+});
+
+//currently non-functional, html does not give eventid
+app.get('/deleteSaved_event', (req, res) => {
+  const eventid = parseInt(req.body.eventid);
+  const Delquery = `DELETE FROM saved_events WHERE userid = $1 AND eventid = $2;`;
+  const Selquery = `
+  SELECT 
+  ev.eventid,
+  event_name, 
+  event_desc, 
+  to_char(event_date, \'DD Month YYYY\') AS event_date, 
+  to_char(event_time, \'HH24:MI\') AS event_time, 
+  country_name, 
+  city_name, 
+  image_link, 
+  image_desc,
+  to_char(date_saved, \'DD Month YYYY\') AS date_saved
+  FROM users us JOIN saved_events se ON us.userid = se.userid
+  JOIN events ev ON ev.eventid = se.eventid
+  JOIN countries co ON co.countryid = ev.countryid
+  JOIN cities ci ON ci.countryid = co.countryid
+  JOIN images im ON ev.eventid = im.eventid
+  WHERE se.userid = $1;`;
+
+  db.tx(async t => {
+    await t.none(Delquery, [user.userid, eventid]);
+    return t.any(Selquery, [user.userid]);
+  })
+  .then(events => {
+    console.log(events);
+    res.render('pages/saved_events', {
+      email: user.email,
+      events,
+      first_name: user.first_name,
+    });
+  })
+  .catch(err => {
+    res.render('pages/saved_events', {
+      email: user.email,
+      events: [],
+      first_name: user.first_name,
+    });
+  });
+});
 
 // POST register sql: INSERT INTO users (password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5) returning *;
 /*
@@ -179,5 +370,15 @@ and make two posts, one with dob and one without
 */
 
 // GET login sql: SELECT username, email, first_name, last_name FROM users WHERE email = $1;
+
+/*
+when the endpoint is written for these, render the events page with the events data structure like done in the /events endpoint 
+searching events based on city_name
+SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE city_name = $1;
+searching events based on country_name
+SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE country_name = $1;
+basic search based on preference data if we are still planning on doing that (this is probabaly not going to work, but its a skeleton)
+SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE e.preference_data LIKE '%[$1]%' OR ci.preference_data LIKE '%[$2]%' OR c.preference_data '%[$3]';
+*/
 
 module.exports = app.listen(3000);

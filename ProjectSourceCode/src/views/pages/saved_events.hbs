@@ -3,31 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events</title>
+    <title>Saved Events</title>
 </head>
 <body>
     {{> message}}
-    <h1>Events</h1>
+    <h1>{{first_name}}'s Saved Events</h1>
     {{#if events.length}}
         <ul>
             {{#each events}}
                 <li>
                     <h2>{{event_name}}</h2>
+                    <p>Date Saved: {{date_saved}}</p>
                     <p>Date: {{event_date}}</p>
                     <p>Time: {{event_time}}</p>
                     <p>Country: {{country_name}}</p>
                     <p>City: {{city_name}}</p>
                     <p>Event Description: {{event_desc}}</p>
-                    <p>
-                        <form method="post" action='/events/add'>
+                    {{!-- <p> currentlu unfunction, does not give js eventid
+                        <form method="delete" action='/deleteSaved_event'>
                             <input type="hidden" name="eventid" value={{eventid}}>
-                            {{#if saved}}
-                                <button disabled>Save</button>
-                            {{else}}
-                                <button ADD>Save</button>
-                            {{/if}}
+                                <button DELETE>Unsave</button>
                         </form>
-                    </p>
+                    </p> --}}
                     <img src="{{image_link}}" alt="{{image_desc}}">
                 </li>
             {{/each}}
@@ -38,4 +35,3 @@
 </body>
 {{!-- {{> footer}} --}}
 </html>
-
