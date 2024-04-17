@@ -72,6 +72,7 @@ app.get('/welcome', (req, res) => { //Given test case in Lab11
 app.get('/login', (req, res) => {
     res.render('pages/login');
 });
+
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -104,6 +105,7 @@ app.post('/login', async (req, res) => {
       return res.redirect('/login');
   }
 });
+
 app.get('/register', (req, res) => 
 {
     res.render('pages/register');
@@ -158,5 +160,34 @@ and make two posts, one with dob and one without
 */
 
 // GET login sql: SELECT username, email, first_name, last_name FROM users WHERE email = $1;
+
+app.get('/search', (req, res) => {
+  res.render('pages/search');
+});
+
+app.post('/search', async (req, res) => {
+  const { location_name } = req.body; // Assuming the front-end sends 'location_name'
+  if (!location_name) {
+      return res.status(400).json({ error: "Location name is required for search." });
+  }
+
+  try {
+      // Query the locations table to find matching locations
+      const results = await db.any('SELECT * FROM locations WHERE location_name ILIKE $1', [`%${location_name}%`]);
+      
+      if (results.length === 0) {
+          // No results found
+          return res.status(404).json({ message: "No locations found matching your query." });
+      }
+
+      // Send back the found locations
+      res.json({ locations: results });
+  } catch (error) {
+      console.error('Error during location search:', error);
+      res.status(500).json({ error: "An error occurred while searching for locations." });
+  }
+});
+
+
 
 module.exports = app.listen(3000);
