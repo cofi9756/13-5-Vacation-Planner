@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events</title>
+</head>
+<body>
+    {{> message}}
+    <h1>Events</h1>
+    {{#if events.length}}
+        <ul>
+            {{#each events}}
+                <li>
+                    <h2>{{event_name}}</h2>
+                    <p>Date: {{event_date}}</p>
+                    <p>Time: {{event_time}}</p>
+                    <p>Country: {{country_name}}</p>
+                    <p>City: {{city_name}}</p>
+                    <p>Event Description: {{event_desc}}</p>
+                    <p>
+                        <form method="post" action='/events/add'>
+                            <input type="hidden" name="eventid" value={{eventid}}>
+                            {{#if saved}}
+                                <button disabled>Save</button>
+                            {{else}}
+                                <button ADD>Save</button>
+                            {{/if}}
+                        </form>
+                    </p>
+                    <img src="{{image_link}}" alt="{{image_desc}}">
+                </li>
+            {{/each}}
+        </ul>
+    {{else}}
+        <p>No events found.</p>
+    {{/if}}
+</body>
+{{!-- {{> footer}} --}}
+</html>
+
