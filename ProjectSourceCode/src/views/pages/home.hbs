@@ -1,3 +1,28 @@
-<h1>
-    Hello!
-</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nomad Nexus</title>
+</head>
+<body style="font-family: 'Arial', sans-serif; color: #333; padding: 20px; background-color: #f8f8f8; text-align: center;">
+    {{#if user}}
+        <h1 style="color: #4a90e2;">Welcome, {{user.first_name}}!</h1>
+        <p style="margin-bottom: 30px;">Let's plan your next trip:</p>
+        <form action="/trip" method="post" style="display: inline-block; text-align: left; background-color: #fff; padding: 40px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+            <div style="margin-bottom: 20px;">
+                <label for="destination" style="display: block; margin-bottom: 5px;">Where do you want to go?</label>
+                <input type="text" id="destination" name="destination" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="budget" style="display: block; margin-bottom: 5px;">Your Budget ($):</label>
+                <input type="number" id="budget" name="budget" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <button type="submit" style="background-color: #5cb85c; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Submit</button>
+        </form>
+    {{else}}
+        <h1>Welcome to Nomad Nexus!</h1>
+        <p>To access personalized trip planning, please <a href="/login" style="color: #4a90e2; text-decoration: none;">login</a> or <a href="/register" style="color: #4a90e2; text-decoration: none;">register</a>.</p>
+    {{/if}}
+</body>
+</html>
