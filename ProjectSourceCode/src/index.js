@@ -109,8 +109,7 @@ ORDER BY e.eventid ASC;`;
 
 // **API Routes**
 app.get('/', (req, res) => { 
-   
-    res.send('Hello, World!');
+  res.redirect('/home');
   });
 
 app.get('/welcome', (req, res) => { //Given test case in Lab11
@@ -124,53 +123,41 @@ app.get('/login', (req, res) => {
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
-    
-      if (req.session) {
-          req.session.message = 'Username and password are required.';
-      }
-      return res.redirect('/login');
+    if (req.session) {
+        req.session.message = 'Username and password are required.';
+    }
+    return res.redirect('/login');
   }
 
   try {
-    
-      const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
-
-      if (user && await bcrypt.compare(password, user.password)) {
-        db.any('SELECT * FROM users WHERE username = $1', [username])  
-          .then(data => {
-            //currently not saving the users data outside of this function 
-            user.userid = data[0].userid;
-            user.username = username; 
-            user.email = data[0].email;
-            user.first_name = data[0].first_name;
-            user.last_name = data[0].last_name;
-            user.date_of_birth = data[0].date_of_birth;
-
-            req.session.user = user;
-            console.log(req.session.user);
-            req.session.save();
-          })
-          .catch(err => {
-            console.log("err saving user data");
-          });
-
-          //remeber to change this back to /home
-          return res.redirect('/events');
-      } else {
-          
-          if (req.session) {
-              req.session.message = 'Invalid username or password.';
-          }
-          return res.redirect('/login');
-      }
-  } catch (error) {
-      console.error('Error during login:', error);
+    const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
+    if (user && await bcrypt.compare(password, user.password)) {
+      req.session.user = {
+          userid: user.userid,
+          username: user.username,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          date_of_birth: user.date_of_birth
+      };
+      console.log(req.session.user);
+      await req.session.save(); // Ensure the session is saved before redirecting
+      return res.redirect('/home');
+    } else {
       if (req.session) {
-          req.session.message = 'An error occurred, please try again.';
+          req.session.message = 'Invalid username or password.';
       }
       return res.redirect('/login');
+    }
+  } catch (error) {
+    console.error('Error during login:', error);
+    if (req.session) {
+        req.session.message = 'An error occurred, please try again.';
+    }
+    return res.redirect('/login');
   }
 });
+
 
 app.get('/register', (req, res) => 
 {
@@ -409,6 +396,28 @@ app.post('/search', async (req, res) => {
       res.status(500).json({ error: "An error occurred while searching for locations." });
   }
 });
+
+app.get('/home', (req, res) => {
+  if (req.session.user) {
+      res.render('pages/home', {
+          user: req.session.user // Pass user data if logged in
+      });
+  } else {
+      res.render('pages/home'); // Render without user data if not logged in
+  }
+});
+
+app.post('/trip', (req, res) => {
+  if (!req.session.user) {
+      return res.redirect('/login'); // Redirect to login if not authenticated
+  }
+
+  const { destination, budget} = req.body;
+  console.log('Trip details:', { destination, budget});
+
+  res.redirect('/events'); // Redirect to a confirmation or next step page
+});
+
 
 
 
