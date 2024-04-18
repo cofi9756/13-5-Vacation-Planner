@@ -1,0 +1,45 @@
+body {
+    background-color: #000080; 
+    color: #F5F5DC; 
+    font-family: Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #D3D3D3; 
+    font-weight: bold; 
+}
+
+button, .btn {
+    background-color: #008000; 
+    color: white; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 5px;
+    cursor: pointer; 
+}
+
+button:hover, .btn:hover {
+    background-color: darkslategrey; 
+}
+
+a {
+    color: #F5F5DC; 
+    text-decoration: none; 
+}
+
+a:hover {
+    text-decoration: underline; 
+}
+
+.navbar-brand, .nav-link {
+    color: lightyellow; 
+}
+
+.nav-link:hover {
+    color: white;
+}
+
+.navbar {
+    border-bottom: 1px solid #444; 
+    background-color: darkgray;
+}
