@@ -13,7 +13,7 @@ const session = require('express-session');
 const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
-  partialsDir: __dirname + '/views/pages/partials',
+  partialsDir: __dirname + '/views/partials',
 });
 
 // database configuration
