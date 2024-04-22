@@ -8,6 +8,7 @@ const handlebars = require('express-handlebars');
 const Handlebars = require('handlebars');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const axios = require('axios');
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
@@ -418,7 +419,12 @@ app.post('/trip', (req, res) => {
   res.redirect('/events'); // Redirect to a confirmation or next step page
 });
 
+const auth = (req,res,next) => {
+  if (!req.session.user) {
+    return res.redirect('/login');  // default redirect to login page
+  }
+}
 
-
+app.use(auth);
 
 module.exports = app.listen(3000);
