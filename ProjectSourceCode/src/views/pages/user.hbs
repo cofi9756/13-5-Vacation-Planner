@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../resources/css/style.css">
+    <title>User Profile</title>
+</head>
+<body>
+    <div class="container">
+        <h1>User Profile</h1>
+        <p>Database connection successful</p>
+        <p><strong>User ID:</strong> {{user.userid}}</p>
+        <p><strong>Username:</strong> {{user.username}}</p>
+        <p><strong>Email:</strong> {{user.email}}</p>
+        <p><strong>First Name:</strong> {{user.first_name}}</p>
+        <p><strong>Last Name:</strong> {{user.last_name}}</p>
+        <p><strong>Date of Birth:</strong> {{user.date_of_birth}}</p>
+
+        <form action="/update-username" method="POST">
+            <label for="new_username">New Username:</label>
+            <input type="text" id="new_username" name="new_username" required>
+            <button type="submit">Update Username</button>
+        </form>
+        <button onclick="logout()">Logout</button>
+    </div>
+    <script src="../../index.js"></script>
+</body>
+</html>

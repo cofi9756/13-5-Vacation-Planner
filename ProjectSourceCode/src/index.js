@@ -437,6 +437,16 @@ app.get('/home', (req, res) => {
   }
 });
 
+app.get('/user', (req, res) => {
+  if (req.session.user) {
+      res.render('pages/user', {
+          user: req.session.user // Pass user data if logged in
+      });
+  } else {
+      res.render('pages/login'); // Render without user data if not logged in
+  }
+});
+
 app.post('/trip', (req, res) => {
   if (!req.session.user) {
       return res.redirect('/login'); // Redirect to login if not authenticated
@@ -471,7 +481,6 @@ app.post('/trip', (req, res) => {
       });
     }); // Redirect to a confirmation or next step page
 });
-
 
 
 
