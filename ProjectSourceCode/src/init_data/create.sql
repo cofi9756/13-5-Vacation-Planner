@@ -30,15 +30,17 @@ CREATE TABLE cities (
 --     preference_data VARCHAR(150)
 -- );
 
+-- change events to reference a cityid
 CREATE TABLE events (
     eventid SERIAL PRIMARY KEY NOT NULL,
-    countryid INT NOT NULL,
+    cityid INT NOT NULL,
     event_name VARCHAR(100) NOT NULL,
     event_desc VARCHAR(150),
+    cost INT NOT NULL,
     event_date date NOT NULL,
     event_time time NOT NULL,
     preference_data VARCHAR(150),
-    FOREIGN KEY (countryid) REFERENCES countries(countryid)
+    FOREIGN KEY (cityid) REFERENCES cities(cityid)
 );
 
 CREATE TABLE images (
