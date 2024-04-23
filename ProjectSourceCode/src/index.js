@@ -14,7 +14,7 @@ const axios = require('axios');
 const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
-  partialsDir: __dirname + '/views/partials',
+  partialsDir: __dirname + '/views/pages/partials',
 });
 
 // database configuration
@@ -490,5 +490,130 @@ const auth = (req,res,next) => {
 }
 
 app.use(auth);
+
+app.get('/smart_search', (req, res) => {
+  res.render('pages/search_api');
+});
+
+app.get('/search_api', async (req, res) => {
+  // const location = req.query.location;
+  // const start_date = req.query.start_date;
+  // const end_date = req.query.end_date;
+  // const categories = [];
+  //   if (req.query.expos) categories.push('expos');
+  //   if (req.query.concerts) categories.push('concerts');
+  //   if (req.query.festivals) categories.push('festivals');
+  //   if (req.query.performing_arts) categories.push('performing-arts');
+  //   if (req.query.sports) categories.push('sports');
+  //   if (req.query.conferences) categories.push('conferences');
+  //   if (req.query.community) categories.push('community');
+  // const location_result = await axios({
+  //   url: 'https://api.predicthq.com/v1/places/',
+  //   method: 'GET',
+  //   dataType: 'json',
+  //   headers: {
+  //     'Authorization': `Bearer ${process.env.API_KEY}`,
+  //     'Accept': 'application/json'
+  //   },
+  //   params: {
+  //     q: location,
+  //     limit: 1
+  //   }
+  // })
+  //   .then(location_result => {
+  //     const location_id = location_result.id;
+  //     const location_name = location_result.name;
+  //   })
+  //   .catch(error => {
+  //     res.render('pages/search_api', {
+  //       message: 'Invalid location'
+  //     });
+  //   });
+  // const events_result = await axios({
+  //   url: 'https://api.predicthq.com/v1/events/',
+  //   method: 'GET',
+  //   dataType: 'json',
+  //   headers: {
+  //     'Authorization': `Bearer ${process.env.API_KEY}`,
+  //     'Accept': 'application/json'
+  //   },
+  //   params: {
+  //     'place.scope': location_id,
+  //     'active.gte': start_date,
+  //     'active.lte': end_date,
+  //     'category': categories,
+  //   }
+  // })
+  const location = req.query.location;
+  const start_date = req.query.start_date;
+  const end_date = req.query.end_date;
+  const categories = [];
+    if (req.query.expos) categories.push('expos');
+    if (req.query.concerts) categories.push('concerts');
+    if (req.query.festivals) categories.push('festivals');
+    if (req.query.performing_arts) categories.push('performing-arts');
+    if (req.query.sports) categories.push('sports');
+    if (req.query.conferences) categories.push('conferences');
+    if (req.query.community) categories.push('community');  
+
+  try {
+    const locationResponse = await axios({
+      url: 'https://api.predicthq.com/v1/places/',
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${process.env.API_KEY}`,
+        'Accept': 'application/json'
+      },
+      params: {
+        q: location,
+        limit: 1
+      }
+    });
+
+    if (locationResponse.data.results.length === 0) {
+      return res.render('pages/search_api', { message: 'Invalid location' });
+    }
+
+    const location_id = locationResponse.data.results[0].id;
+    const location_name = locationResponse.data.results[0].name;
+
+    try{
+      const eventsResponse = await axios({
+        url: 'https://api.predicthq.com/v1/events/',
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${process.env.API_KEY}`,
+          'Accept': 'application/json'
+        },
+        params: {
+          'place.scope': location_id,
+          'active.gte': start_date,
+          'active.lte': end_date,
+          'category': categories.join(),
+          'limit': 10,
+        }
+      });
+      if(eventsResponse.data.results.length === 0){
+        return res.render('pages/search_api', { message: 'Could not find any events with selected options'});
+      }
+
+      const events = eventsResponse.data.results.map(event => ({
+        title: event.title,
+        start: event.start,
+        end: event.end,
+        category: event.category,
+        description: event.description
+      }));
+    }
+    catch (error) {
+      res.render('pages/search_api', { message: `Error finding events in ${location_name} with selected options`});
+    }
+  }
+  catch (error) {
+    res.render('/pages/search_api', {
+      message: 'Error finding location'
+    });
+  }
+});
 
 module.exports = app.listen(3000);
