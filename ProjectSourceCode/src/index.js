@@ -383,14 +383,6 @@ app.get('/deleteSaved_event', (req, res) => {
   });
 });
 
-// POST register sql: INSERT INTO users (password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5) returning *;
-/*
-with this one i made dob optional on the database, if we want we can make a split post like in lab 6
-and make two posts, one with dob and one without
-*/
-
-// GET login sql: SELECT username, email, first_name, last_name FROM users WHERE email = $1;
-
 /*
 when the endpoint is written for these, render the events page with the events data structure like done in the /events endpoint 
 searching events based on city_name
@@ -448,39 +440,114 @@ app.get('/user', (req, res) => {
   }
 });
 
+// app.post('/trip', (req, res) => {
+//   if (!req.session.user) {
+//       return res.redirect('/login'); // Redirect to login if not authenticated
+//   }
+
+//   const { destination, budget} = req.body;
+//   console.log('Trip details:', { destination, budget});
+
+//   const saved = req.query.saved;
+//   userid = req.session.user.userid;
+//   req.session.session_destination = {destination: destination};
+//   req.session.session_budget = {budget: budget};
+  
+//   db.any(saved ? saved_events : all_events, [req.session.user.userid, destination, budget])
+//   .then(events => {
+//       console.log(events);
+//       res.render('pages/events', {
+//         destination,
+//         budget,
+//         userid,
+//         events,
+//         action: req.query.saved ? 'delete' : 'add',
+//       });
+//     })
+//     .catch(err => {
+//       res.render('pages/events', {
+//         userid,
+//         destination,
+//         budget,
+//         events: [],
+//         error: true,
+//       });
+//     }); // Redirect to a confirmation or next step page
+// });
+
+app.get('/api/cities', async (req, res) => {
+  const searchTerm = req.query.q;
+  if (!searchTerm) {
+    return res.status(400).json({ message: 'Query parameter "q" is required.' });
+  }
+
+  console.log(`Searching for cities starting with: ${searchTerm}`);
+
+  try {
+    const query = "SELECT city_name FROM cities WHERE city_name ILIKE $1 ORDER BY city_name ASC";
+    const results = await db.any(query, [`${searchTerm}%`]);  
+    console.log('Results:', results);
+    res.json(results.map(city => city.city_name));  // Send back just the city names
+  } catch (error) {
+    console.error('Failed to fetch cities:', error);
+    res.status(500).send('Server error');
+  }
+});
+
 app.post('/trip', (req, res) => {
   if (!req.session.user) {
       return res.redirect('/login'); // Redirect to login if not authenticated
   }
 
-  const { destination, budget} = req.body;
-  console.log('Trip details:', { destination, budget});
+  const { destination, budget, tripPreferences, startDate, endDate } = req.body;
+  const userid = req.session.user.userid;
 
-  const saved = req.query.saved;
-  userid = req.session.user.userid;
-  req.session.session_destination = {destination: destination};
-  req.session.session_budget = {budget: budget};
-  
-  db.any(saved ? saved_events : all_events, [req.session.user.userid, destination, budget])
-  .then(events => {
-      console.log(events);
-      res.render('pages/events', {
-        destination,
-        budget,
-        userid,
-        events,
-        action: req.query.saved ? 'delete' : 'add',
-      });
-    })
-    .catch(err => {
-      res.render('pages/events', {
-        userid,
-        destination,
-        budget,
-        events: [],
-        error: true,
-      });
-    }); // Redirect to a confirmation or next step page
+  req.session.session_destination = { destination: destination };
+  req.session.session_budget = { budget: budget };
+
+  if (destination === '') {
+      // User asked for a recommendation
+      const preferencesPattern = tripPreferences.split(',').map(pref => `%${pref}%`).join('|');
+
+      // Since only maximum budget is considered, update the query accordingly
+      const sqlQuery = `
+          SELECT * FROM locations
+          WHERE budget_max >= $1 AND preferences ~* $2;
+      `;
+
+      db.any(sqlQuery, [budget, preferencesPattern])
+        .then(results => {
+            res.render('pages/recommend', { locations: results });
+        })
+        .catch(error => {
+            console.error('Error fetching destinations:', error);
+            res.status(500).send('Error fetching destinations');
+        });
+  } else {
+      // Handle the request to plan a trip with a known destination
+      const saved = req.query.saved;
+      db.any(saved ? saved_events : all_events, [userid, destination, budget])
+          .then(events => {
+              console.log('Events:', events);
+              res.render('pages/events', {
+                  destination,
+                  budget,
+                  userid,
+                  events,
+                  action: req.query.saved ? 'delete' : 'add',
+              });
+          })
+          .catch(err => {
+              console.error('Error processing events:', err);
+              res.render('pages/events', {
+                  userid,
+                  destination,
+                  budget,
+                  events: [],
+                  error: true,
+              });
+          });
+  }
 });
 
 const auth = (req,res,next) => {

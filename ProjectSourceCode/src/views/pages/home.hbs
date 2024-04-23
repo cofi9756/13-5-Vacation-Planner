@@ -3,37 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Nomad Nexus</title>
-    <script type="text/javascript">
-        // Function to toggle form fields
-        function toggleFormFields() {
-            // Check which radio button is checked
-            var knowWhereToGo = document.getElementById('choose').checked;
-            
-            // Get references to the form fields
-            var destinationField = document.getElementById('destinationField');
-            var travelMethodField = document.getElementById('travelMethodField');
-            var travelPreferencesField = document.getElementById('travelPreferences');
-
-            // If the user knows where they want to go, show all except climate preference
-            if (knowWhereToGo) {
-                destinationField.style.display = '';
-                travelMethodField.style.display = '';
-                travelPreferencesField.style.display = 'none'; // Hide climate preference
-            } else {
-                // If the user needs a recommendation, hide destination and show the rest
-                destinationField.style.display = 'none'; // Hide destination field
-                travelMethodField.style.display = '';
-                travelPreferencesField.style.display = '';
-            }
-        }
-    </script>
 </head>
 <body style="font-family: 'Arial', sans-serif; color: #333; padding: 20px; background-color: #f8f8f8; text-align: center;">
     {{#if user}}
         <h1 style="color: #4a90e2;">Welcome, {{user.first_name}}!</h1>
         <p style="margin-bottom: 30px;">Let's plan your next trip:</p>
         <form id="tripForm" action="/trip" method="post" style="display: inline-block; text-align: left; background-color: #fff; padding: 40px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 8px;">
-            
             <!-- Radio buttons to toggle the form -->
             <div style="margin-bottom: 20px;">
                 <input type="radio" id="choose" name="tripType" value="choose" checked onclick="toggleFormFields()">
@@ -44,9 +19,13 @@
 
             <!-- Destination field -->
             <div id="destinationField" style="margin-bottom: 20px;">
-                <label for="destination" style="display: block; margin-bottom: 5px;">Your Destination:</label>
-                <input type="text" id="destination" name="destination" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <label for="destination">Your Destination:</label>
+                <input type="text" id="destination" name="destination" list="destinationList" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <datalist id="destinationList"></datalist>
             </div>
+
+
+
 
             <!-- Travel dates field (shown in both cases) -->
             <div style="margin-bottom: 20px;">
@@ -64,10 +43,13 @@
             </div>
 
             <!-- Budget field (always shown) -->
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px; position: relative;">
                 <label for="budget" style="display: block; margin-bottom: 5px;">Your Budget ($):</label>
-                <input type="number" id="budget" name="budget" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="number" id="budget" name="budget" value="0" required step="500" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <button type="button" onclick="incrementBudget()" style="position: absolute; right: 0; top: 50%; transform: translateY(-15%); width: 30px; height: 30px;">+</button>
+                <button type="button" onclick="decrementBudget()" style="position: absolute; right: 30px; top: 50%; transform: translateY(-15%); width: 30px; height: 30px;">-</button>
             </div>
+
 
             <!-- Travel method field (shown in both cases) -->
             <div id="travelMethodField" style="margin-bottom: 20px;">
@@ -106,7 +88,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Submit button -->
             <button type="submit" style="background-color: #5cb85c; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Plan Trip</button>
         </form>
@@ -114,41 +96,170 @@
         <h1>Welcome to Nomad Nexus!</h1>
         <p>To access personalized trip planning, please <a href="/login" style="color: #4a90e2; text-decoration: none;">login</a> or <a href="/register" style="color: #4a90e2; text-decoration: none;">register</a>.</p>
     {{/if}}
+        <script type="text/javascript">
+            function toggleFormFields() {
+                var knowWhereToGo = document.getElementById('choose').checked;
+                var destinationField = document.getElementById('destinationField');
+                var travelMethodField = document.getElementById('travelMethodField');
+                var travelPreferencesField = document.getElementById('travelPreferences');
+                var destinationInput = document.getElementById('destination');
+
+                if (knowWhereToGo) {
+                    destinationField.style.display = '';
+                    travelMethodField.style.display = '';
+                    travelPreferencesField.style.display = 'none';
+                    document.getElementById('budget').value = '0';
+                    document.querySelectorAll('#travelPreferences input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    destinationInput.setAttribute('required', 'required');
+                    destinationInput.value = '';
+                } else {
+                    destinationField.style.display = 'none';
+                    travelMethodField.style.display = '';
+                    travelPreferencesField.style.display = '';
+                    document.getElementById('budget').value = '0';
+                    travelPreferencesField.value = '';
+                    destinationInput.removeAttribute('required'); 
+                    destinationInput.value = '';
+                }
+                // Attach event listeners to radio buttons
+                document.getElementById('choose').addEventListener('change', toggleFormFields);
+                document.getElementById('recommend').addEventListener('change', toggleFormFields);
+            }
+
+            function setDepartureDate() {
+                var arrivalDate = document.getElementById('startDate').value;
+                var departureInput = document.getElementById('endDate');
+                departureInput.min = arrivalDate;
+                if (departureInput.value && arrivalDate > departureInput.value) {
+                    departureInput.value = arrivalDate;
+                }
+            }
+
+            function setMinStartDate() {
+                var today = new Date().toISOString().split('T')[0];
+                document.getElementById('startDate').min = today;
+                document.getElementById('startDate').addEventListener('change', setDepartureDate);
+            }
+
+             // This function now only prepares the validation and does not display it
+            function prepareValidation() {
+                var firstPreferenceCheckbox = document.getElementById('mountains');
+                var checkboxes = document.querySelectorAll('input[name="tripPreferences"]:checked');
+                
+                if (!document.getElementById('choose').checked && checkboxes.length === 0) {
+                    firstPreferenceCheckbox.setCustomValidity('Please choose at least one trip preference');
+                } else {
+                    firstPreferenceCheckbox.setCustomValidity('');
+                }
+            }
+
+            // The event listener for form submission
+            document.getElementById('tripForm').addEventListener('submit', function(event) {
+                prepareValidation(); // Prepare the validation first
+
+                // Then display the validation message or clear it
+                var isValid = document.getElementById('mountains').checkValidity();
+                if (!isValid) {
+                    event.preventDefault(); // Prevent form from submitting if not valid
+                    document.getElementById('mountains').reportValidity();
+                }
+            });
+
+            // Initialize on DOMContentLoaded
+            document.addEventListener('DOMContentLoaded', function() {
+                toggleFormFields(); // To set up the initial display state
+                setMinStartDate();  // To ensure date fields are not set in the past
+            });
+
+            // Attach change event listeners to checkboxes to clear validation message when any is checked
+            document.querySelectorAll('input[name="tripPreferences"]').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    document.getElementById('mountains').setCustomValidity('');
+                });
+            });
+            function incrementBudget() {
+                var budgetInput = document.getElementById('budget');
+                budgetInput.value = parseInt(budgetInput.value) + 500; // Increment by 500
+            }
+
+            function decrementBudget() {
+                var budgetInput = document.getElementById('budget');
+                var currentValue = parseInt(budgetInput.value);
+                if (currentValue >= 500) { // Ensure it doesn't go below 0
+                budgetInput.value = currentValue - 500; // Decrement by 500
+                }
+            }
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                const destinationInput = document.getElementById('destination');
+                const dataList = document.getElementById('destinationList');
+
+                // Clear datalist options
+                function clearDataList() {
+                    dataList.innerHTML = '';
+                }
+
+                destinationInput.addEventListener('input', function() {
+                    const value = destinationInput.value;
+                    if (value.length > 1) {
+                        fetch(`/api/cities?q=${encodeURIComponent(value)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                clearDataList(); // Clear previous options
+                                data.forEach(cityName => {
+                                    const option = document.createElement('option');
+                                    option.value = cityName;
+                                    dataList.appendChild(option);
+                                });
+                            })
+                            .catch(error => console.error('Error fetching cities:', error));
+                    } else {
+                        clearDataList(); // Clear the list if under two characters
+                    }
+                });
+
+                // Event to handle selection or clicking outside the input
+                destinationInput.addEventListener('blur', function() {
+                    setTimeout(clearDataList, 10); // Delay clear to ensure selection can be processed
+                });
+
+                // Ensure the datalist is cleared after a selection matches
+                destinationInput.addEventListener('change', function() {
+                    const currentInput = destinationInput.value;
+                    let matchFound = false;
+                    const options = dataList.options;
+                    for (let i = 0; i < options.length; i++) {
+                        if (options[i].value === currentInput) {
+                            matchFound = true;
+                            break;
+                        }
+                    }
+                    if (matchFound) {
+                        setTimeout(clearDataList, 10); // Delay clear to prevent immediate reappear
+                    }
+                });
+            });
+
+
+    // Event to clear the datalist when a selection is confirmed
+    destinationInput.addEventListener('change', function() {
+        // Ensure the value in the input matches one of the options
+        const currentInput = destinationInput.value;
+        const matchesOption = Array.from(dataList.options).some(option => option.value === currentInput);
+        if (matchesOption) {
+            dataList.innerHTML = ''; // Clear the datalist to prevent re-showing
+        }
+    });
+
+    destinationInput.addEventListener('blur', function() {
+        dataList.innerHTML = ''; // Clear the datalist when input loses focus
+    });
+
     
-    <!-- Initialize form fields on page load -->
-    <script type="text/javascript">
-        // Call this function to set the initial state of the form fields
-        toggleFormFields();
 
-        // Function to set the minimum departure date based on the selected arrival date
-        function setDepartureDate() {
-            var arrivalDate = document.getElementById('startDate').value;
-            var departureInput = document.getElementById('endDate');
-            
-            departureInput.min = arrivalDate; // Set the minimum value to the arrival date
-            
-            if (departureInput.value && arrivalDate > departureInput.value) {
-                departureInput.value = arrivalDate;
-            }
-        }
 
-        // Function to set the minimum start date to today's date
-        function setMinStartDate() {
-            var today = new Date().toISOString().split('T')[0];
-            document.getElementById('startDate').min = today;
-            document.getElementById('startDate').addEventListener('change', setDepartureDate);
-        }
-
-        // Set the minimum start date on page load
-        setMinStartDate();
-
-        document.getElementById('tripForm').addEventListener('submit', function(event) {
-            var checkboxes = document.querySelectorAll('input[name="tripPreferences"]:checked');
-            if (checkboxes.length === 0) {
-                event.preventDefault();
-                alert('Please select at least one trip preference.');
-            }
-        });
-    </script>
+        </script>
 </body>
 </html>

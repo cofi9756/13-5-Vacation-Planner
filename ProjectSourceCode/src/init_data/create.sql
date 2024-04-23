@@ -59,3 +59,11 @@ CREATE TABLE saved_events (
     FOREIGN KEY (userid) REFERENCES users(userid),
     FOREIGN KEY (eventid) REFERENCES events(eventid)
 );
+
+--Temp table to get recommendation page working
+CREATE TABLE locations (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    budget_max INT NOT NULL,
+    preferences VARCHAR(255) NOT NULL
+);
