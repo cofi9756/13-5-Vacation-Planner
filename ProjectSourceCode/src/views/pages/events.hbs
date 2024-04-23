@@ -7,12 +7,14 @@
 </head>
 <body>
     {{> message}}
-    <h1>Events</h1>
+    <h1>Events from {{destination}}</h1>
+    <h1>Costing ${{budget}} or less</h1>
     {{#if events.length}}
         <ul>
             {{#each events}}
                 <li>
                     <h2>{{event_name}}</h2>
+                    <p>Cost: ${{cost}}</p>
                     <p>Date: {{event_date}}</p>
                     <p>Time: {{event_time}}</p>
                     <p>Country: {{country_name}}</p>

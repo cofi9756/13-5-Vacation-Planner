@@ -67,46 +67,55 @@ const user = {
   first_name: undefined,
   last_name: undefined,
   date_of_birth: undefined,
+  destination: undefined,
 };
+const session_destination = {destination: undefined,};
+const session_budget = {budget: undefined,};
 
 const saved_events = `
 SELECT DISTINCT
-e.eventid, 
-e.event_name, 
-e.event_desc, 
-to_char(e.event_date, \'DD Month YYYY\') AS event_date, 
-to_char(e.event_time, \'HH24:MI\') AS event_time, 
+ev.eventid, 
+ev.event_name, 
+ev.event_desc,
+ev.cost, 
+to_char(ev.event_date, 'DD Month YYYY') AS event_date, 
+to_char(ev.event_time, 'HH24:MI') AS event_time, 
 co.country_name, 
 ci.city_name, 
-i.image_link, 
-i.image_desc, 
-u.userid = $1 AS saved 
-FROM events e 
-JOIN saved_events se ON e.eventid = se.eventid 
-JOIN users u ON se.userid = u.userid 
-JOIN countries co ON co.countryid = e.countryid 
-JOIN cities ci ON ci.countryid = co.countryid 
-JOIN images i ON e.eventid = i.eventid;`;
+im.image_link, 
+im.image_desc, 
+us.userid = $1 AS saved 
+FROM events ev
+JOIN saved_events se ON ev.eventid = se.eventid 
+JOIN users us ON se.userid = us.userid 
+JOIN cities ci ON ci.cityid = ev.cityid 
+JOIN countries co ON co.countryid = ci.countryid 
+JOIN images im ON ev.eventid = im.eventid
+WHERE ci.city_name = $2 AND ev.cost < $3;`;
 
 const all_events = `
 SELECT 
-e.eventid, 
-e.event_name, 
-e.event_desc, 
-to_char(e.event_date, \'DD Month YYYY\') AS event_date, 
-to_char(e.event_time, \'HH24:MI\') AS event_time,
+ev.eventid, 
+ev.event_name, 
+ev.event_desc, 
+ev.cost,
+to_char(ev.event_date, 'DD Month YYYY') AS event_date, 
+to_char(ev.event_time, 'HH24:MI') AS event_time,
 co.country_name, 
 ci.city_name, 
-i.image_link, 
-i.image_desc,
+im.image_link, 
+im.image_desc,
 CASE 
-WHEN e.eventid IN (
+WHEN ev.eventid IN (
   SELECT se.eventid FROM saved_events se WHERE se.userid = $1) 
 THEN TRUE 
 ELSE FALSE 
 END AS saved 
-FROM events e JOIN countries co ON e.countryid = co.countryid JOIN cities ci ON co.countryid = ci.countryid JOIN images i ON i.eventid = e.eventid
-ORDER BY e.eventid ASC;`;
+FROM events ev JOIN cities ci ON ci.cityid = ev.cityid 
+JOIN countries co ON co.countryid = ci.countryid
+JOIN images im ON im.eventid = ev.eventid
+WHERE ci.city_name = $2 AND ev.cost < $3
+ORDER BY ev.eventid ASC;`;
 
 // **API Routes**
 app.get('/', (req, res) => { 
@@ -207,6 +216,9 @@ app.post('/register', async (req, res) => {
 });
 
 app.get('/events', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login'); // Redirect to login if not authenticated
+  }
   // const query = 'SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link, image_desc FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid;';
 
 
@@ -226,20 +238,18 @@ app.get('/events', (req, res) => {
   //     });
   //   });
   const saved = req.query.saved;
-  console.log(user);
   
-  db.any(saved ? saved_events : all_events, [user.userid])
+  db.any(saved ? saved_events : all_events, [user.userid, destination, budget])
   .then(events => {
       console.log(events);
       res.render('pages/events', {
-        email: user.email,
         events,
         action: req.query.saved ? 'delete' : 'add',
       });
     })
     .catch(err => {
+      console.log("/events error");
       res.render('pages/events', {
-        email: user.email,
         events: [],
         error: true,
       });
@@ -247,24 +257,37 @@ app.get('/events', (req, res) => {
 });
 
 app.post('/events/add', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login'); // Redirect to login if not authenticated
+  }
   const eventid = parseInt(req.body.eventid);
   const query = 'INSERT INTO saved_events (userid, eventid) VALUES ($1, $2);';
+  
+  console.log("events add");
+  temp_userid = req.session.user.userid;
+  temp_destination = req.session.session_destination.destination;
+  temp_budget = req.session.session_budget.budget;
 
   db.tx(async t => {
-    await t.none(query, [user.userid, eventid]);
-    return t.any(all_events, [user.userid]);
+    await t.none(query, [temp_userid, eventid]);
+    return t.any(all_events, [temp_userid, temp_destination, temp_budget]);
   })
   .then(events => {
     console.log(events);
     res.render('pages/events', {
-      email: user.email,
+      userid: temp_userid,
+      destination: temp_destination,
+      budget: temp_budget,
       events,
       message: `Successfully added event!`,
     });
   })
   .catch(err => {
+    console.log("/events/add error");
     res.render('pages/events', {
-      email: user.email,
+      userid: temp_userid,
+      destination: temp_destination,
+      budget: temp_budget,
       events: [],
       error: true,
     });
@@ -272,11 +295,15 @@ app.post('/events/add', (req, res) => {
 });
 
 app.get('/saved_events', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login'); // Redirect to login if not authenticated
+  }
   const query = `
   SELECT 
   ev.eventid,
   event_name, 
   event_desc, 
+  cost,
   to_char(event_date, \'DD Month YYYY\') AS event_date, 
   to_char(event_time, \'HH24:MI\') AS event_time, 
   country_name, 
@@ -284,25 +311,28 @@ app.get('/saved_events', (req, res) => {
   image_link, 
   image_desc,
   to_char(date_saved, \'DD Month YYYY\') AS date_saved
-  FROM users us JOIN saved_events se ON us.userid = se.userid
-  JOIN events ev ON ev.eventid = se.eventid
-  JOIN countries co ON co.countryid = ev.countryid
-  JOIN cities ci ON ci.countryid = co.countryid
+  FROM saved_events se JOIN events ev ON ev.eventid = se.eventid
+  JOIN cities ci ON ci.cityid = ev.cityid
+  JOIN countries co ON co.countryid = ci.countryid
   JOIN images im ON ev.eventid = im.eventid
   WHERE se.userid = $1;`;
 
-  db.any(query, [user.userid])
+  temp_user = req.session.user;
+
+  db.any(query, [req.session.user.userid])
   .then(events => {
     console.log(events);
     res.render('pages/saved_events', {
-      email: user.email,
+      email: req.session.user.email,
+      user: temp_user,
       events,
-      first_name: user.first_name,
+      first_name: req.session.user.first_name,
     });
   })
   .catch(err => {
     res.render('pages/saved_events', {
-      email: user.email,
+      email: req.session.user.email,
+      user: temp_user,
       events: [],
       first_name: user.first_name,
     });
@@ -408,6 +438,16 @@ app.get('/home', (req, res) => {
   }
 });
 
+app.get('/user', (req, res) => {
+  if (req.session.user) {
+      res.render('pages/user', {
+          user: req.session.user // Pass user data if logged in
+      });
+  } else {
+      res.render('pages/login'); // Render without user data if not logged in
+  }
+});
+
 app.post('/trip', (req, res) => {
   if (!req.session.user) {
       return res.redirect('/login'); // Redirect to login if not authenticated
@@ -416,7 +456,31 @@ app.post('/trip', (req, res) => {
   const { destination, budget} = req.body;
   console.log('Trip details:', { destination, budget});
 
-  res.redirect('/events'); // Redirect to a confirmation or next step page
+  const saved = req.query.saved;
+  userid = req.session.user.userid;
+  req.session.session_destination = {destination: destination};
+  req.session.session_budget = {budget: budget};
+  
+  db.any(saved ? saved_events : all_events, [req.session.user.userid, destination, budget])
+  .then(events => {
+      console.log(events);
+      res.render('pages/events', {
+        destination,
+        budget,
+        userid,
+        events,
+        action: req.query.saved ? 'delete' : 'add',
+      });
+    })
+    .catch(err => {
+      res.render('pages/events', {
+        userid,
+        destination,
+        budget,
+        events: [],
+        error: true,
+      });
+    }); // Redirect to a confirmation or next step page
 });
 
 const auth = (req,res,next) => {
