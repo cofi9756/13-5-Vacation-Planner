@@ -532,7 +532,6 @@ app.get('/search_events', async (req, res) => {
   if (req.query.family) categories.push('family');
   if (req.query.miscellaneous) categories.push('miscellaneous');
 
-
   if(categories.length === 0) {
     return res.render('pages/search_api', {
       destination: session_tripInfo.destination, 
@@ -540,39 +539,53 @@ app.get('/search_events', async (req, res) => {
     });
   }
 
-  destination = session_tripInfo.destination;
-  startDate = session_tripInfo.startDate;
-  endDate = session_tripInfo.endDate;
-  
+  const destination = session_tripInfo.destination;
+  const startDate = new Date(session_tripInfo.startDate).toISOString();
+  const endDate = new Date(session_tripInfo.endDate).toISOString();
+
   console.log(categories);
-  console.log(startDate, endDate, destination);
-  
+  console.log(startDate);
+  console.log(endDate);
+  console.log(destination);
 
   try {
     const response = await axios({
       url: `https://app.ticketmaster.com/discovery/v2/events.json`,
-        method: 'GET',
-        dataType: 'json',
-        headers: {
-          'Accept-Encoding': 'application/json',
-        },
-        params: {
-          apikey: process.env.API_KEY,
-          // startDateTime: startDate,
-          // endDateTime: endDate,
-          // city: [destination],
-          // classificationName: categories,
-        }
+      method: 'GET',
+      headers: {
+        'Accept-Encoding': 'application/json',
+      },
+      params: {
+        apikey: process.env.API_KEY,
+        // startDateTime: startDate,
+        // endDateTime: endDate,
+        city: destination,  // Try as a string if the array format causes issues
+        classificationName: categories,
+      }
     });
 
-    if(response.data._embedded.events.length === 0) {
-      return res.render('pages/home', { message: 'No events found'});
+    if(response.data._embedded && response.data._embedded.events.length === 0) {
+      return res.render('pages/home', { 
+        user: req.session.user, 
+        message: 'No events found',
+      });
     }
 
-    return res.render('pages/events_api', {events: response.data._embedded.events,});
+    const events = response.data._embedded.events.map(event => ({
+      name: event.name,
+      date: event.dates.start.dateTime,
+      image: event.images[0].url,
+      url: event.url
+    }));
+
+    res.render('pages/events_api', {events});
   }
   catch (error) {
-    return res.render('pages/home',{message: 'Error finding events'});
+    console.error('API Error:', error.response ? error.response.data : error.message);
+    res.render('pages/events_api', {
+      events: [],
+      message: 'Error finding events',
+    });
   }
 });
 
@@ -583,7 +596,7 @@ app.get('/logout', (req, res) => {
               console.error('Failed to destroy the session during logout.', err);
           }
           res.clearCookie('connect.sid'); // This is the default session cookie name used by express-session middleware
-          res.redirect('/login', {message: 'Logout successful!'});
+          res.render('pages/login', {message: 'Logout successful!'});
       });
   } else {
       res.redirect('/login'); // Redirect directly if no session exists
