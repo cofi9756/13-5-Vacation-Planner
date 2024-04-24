@@ -142,7 +142,7 @@ app.post('/login', async (req, res) => {
     if (req.session) {
         req.session.message = 'Username and password are required.';
     }
-    return res.redirect('/login', {message: 'Please enter a valid username and password'});
+    return res.render('pages/login', {message: 'Please enter a valid username and password'});
   }
 
   try {
@@ -163,14 +163,14 @@ app.post('/login', async (req, res) => {
       if (req.session) {
           req.session.message = 'Invalid username or password.';
       }
-      return res.redirect('/login', {message: 'Invalid username or password'});
+      return res.render('pages/login', {message: 'Invalid username or password'});
     }
   } catch (error) {
     console.error('Error during login:', error);
     if (req.session) {
         req.session.message = 'An error occurred, please try again.';
     }
-    return res.redirect('/login', {message: 'An error occurred while logging in, please try again'});
+    return res.render('pages/login', {message: 'An error occurred while logging in, please try again'});
   }
 });
 
@@ -214,7 +214,7 @@ app.post('/register', async (req, res) => {
       'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
       [username, hashedPassword, email, first_name, last_name, date_of_birth]
     );
-    res.redirect('/login', {message: 'Thank you for creating an account with us. Log in to being planning your next trip!'});
+    res.render('pages/login', {message: 'Thank you for creating an account with us. Log in to begin planning your next trip!'});
   } catch (error) {
     console.error('Error during registration:', error);
     if (error.code === '23505') {
@@ -542,7 +542,7 @@ app.get('/search_events', async (req, res) => {
   if (req.query.miscellaneous) categories.push('miscellaneous');
 
 
-  if(categories.length == 0) {
+  if(categories.length === 0) {
     return res.render('pages/search_api', {
       destination: session_tripInfo.destination, 
       message: 'Please select at least one event type'
@@ -552,6 +552,10 @@ app.get('/search_events', async (req, res) => {
   destination = session_tripInfo.destination;
   startDate = session_tripInfo.startDate;
   endDate = session_tripInfo.endDate;
+  
+  console.log(categories);
+  console.log(startDate, endDate, destination);
+  
 
   try {
     const response = await axios({
@@ -566,7 +570,7 @@ app.get('/search_events', async (req, res) => {
           startDateTime: startDate,
           endDateTime: endDate,
           city: [destination],
-          classification: categories,
+          classificationName: categories,
         }
     });
 
