@@ -505,30 +505,36 @@ app.post('/trip', (req, res) => {
       return res.redirect('/login'); // Redirect to login if not authenticated
   }
 
-  const { destination, budget, tripPreferences, startDate, endDate } = req.body;
-  const userid = req.session.user.userid;
+  const { destination, budget, startDate, endDate } = req.body;
+  let { tripPreferences } = req.body;
 
-  req.session.session_destination = { destination: destination };
-  req.session.session_budget = { budget: budget };
+  // Ensure tripPreferences is always an array
+  if (!Array.isArray(tripPreferences)) {
+      tripPreferences = [tripPreferences]; // Wrap it in an array if it's not
+  }
+
+  const userid = req.session.user.userid;
+  const preferencesPattern = tripPreferences.join('|'); // Now safe to use join
 
   if (destination === '') {
-      // User asked for a recommendation
-      const preferencesPattern = tripPreferences.split(',').map(pref => `%${pref}%`).join('|');
-
-      // Since only maximum budget is considered, update the query accordingly
       const sqlQuery = `
           SELECT * FROM locations
-          WHERE budget_max >= $1 AND preferences ~* $2;
+          WHERE budget_max <= $1 AND
+          preferences ~* $2;
       `;
 
       db.any(sqlQuery, [budget, preferencesPattern])
         .then(results => {
-            res.render('pages/recommend', { locations: results });
+            if (results.length > 0) {
+                res.render('pages/recommend', { locations: results });
+            } else {
+                res.render('pages/recommend', { locations: [], message: "No matching locations found." });
+            }
         })
-        .catch(error => {
-            console.error('Error fetching destinations:', error);
-            res.status(500).send('Error fetching destinations');
-        });
+          .catch(error => {
+              console.error('Error fetching destinations:', error);
+              res.status(500).send('Error fetching destinations');
+          });
   } else {
       // Handle the request to plan a trip with a known destination
       const saved = req.query.saved;
