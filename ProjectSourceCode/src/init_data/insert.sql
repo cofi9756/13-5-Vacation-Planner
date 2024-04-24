@@ -368,6 +368,8 @@ INSERT INTO locations (name, budget_max, preferences) VALUES
 ('a', 3000, 'beach,mountains'),
 ('b', 4000, 'city'),
 ('c', 2000, 'mountains'),
-('d', 1000, 'beach');
+('d', 1000, 'beach'),
+('e', 1000, 'historicSites'),
+('f', 1000, 'countryside');
 
 
