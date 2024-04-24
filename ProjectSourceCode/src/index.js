@@ -518,8 +518,8 @@ app.post('/trip', (req, res) => {
 
   if (destination === '') {
       const sqlQuery = `
-          SELECT * FROM locations
-          WHERE budget_max <= $1 AND
+          SELECT * FROM cities
+          WHERE budget <= $1 AND
           preferences ~* $2;
       `;
 
