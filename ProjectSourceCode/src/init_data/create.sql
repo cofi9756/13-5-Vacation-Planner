@@ -20,7 +20,8 @@ CREATE TABLE cities (
     countryid INT NOT NULL,
     city_name VARCHAR(100) NOT NULL,
     city_desc VARCHAR(150) NOT NULL,
-    preference_data VARCHAR(150),
+    budget INT NOT NULL,
+    preferences VARCHAR(150),
     FOREIGN KEY (countryid) REFERENCES countries(countryid)
 );
 
