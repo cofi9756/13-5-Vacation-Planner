@@ -477,7 +477,7 @@ app.post('/trip', (req, res) => {
   if (!Array.isArray(tripPreferences)) {
       tripPreferences = [tripPreferences]; // Wrap it in an array if it's not
   }
-  req.session.tripInfo = { destination, budget, startDate, endDate, tripPreferences };
+  // req.session.tripInfo = { destination, budget, startDate, endDate, tripPreferences };
   const userid = req.session.user.userid;
   const preferencesPattern = tripPreferences.join('|'); // Now safe to use join
 
@@ -502,7 +502,7 @@ app.post('/trip', (req, res) => {
           });
   } else {
       // Handle the request to plan a trip with a known destination
-      res.redirect('/calendar');
+      // res.redirect('/calendar');
       return res.render('pages/search_api', {
         destination: session_tripInfo.destination,
       });
@@ -558,10 +558,10 @@ app.get('/search_events', async (req, res) => {
         },
         params: {
           apikey: process.env.API_KEY,
-          startDateTime: startDate,
-          endDateTime: endDate,
-          city: [destination],
-          classificationName: categories,
+          // startDateTime: startDate,
+          // endDateTime: endDate,
+          // city: [destination],
+          // classificationName: categories,
         }
     });
 
