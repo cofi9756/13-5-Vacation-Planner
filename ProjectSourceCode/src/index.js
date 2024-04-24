@@ -395,16 +395,6 @@ app.get('/deleteSaved_event', (req, res) => {
   });
 });
 
-/*
-when the endpoint is written for these, render the events page with the events data structure like done in the /events endpoint 
-searching events based on city_name
-SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE city_name = $1;
-searching events based on country_name
-SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE country_name = $1;
-basic search based on preference data if we are still planning on doing that (this is probabaly not going to work, but its a skeleton)
-SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE e.preference_data LIKE '%[$1]%' OR ci.preference_data LIKE '%[$2]%' OR c.preference_data '%[$3]';
-*/
-
 app.get('/search', (req, res) => {
   res.render('pages/search');
 });
@@ -487,14 +477,14 @@ app.post('/trip', (req, res) => {
   if (!Array.isArray(tripPreferences)) {
       tripPreferences = [tripPreferences]; // Wrap it in an array if it's not
   }
-
+  req.session.tripInfo = { destination, budget, startDate, endDate, tripPreferences };
   const userid = req.session.user.userid;
   const preferencesPattern = tripPreferences.join('|'); // Now safe to use join
 
   if (destination === '') {
       const sqlQuery = `
-          SELECT * FROM locations
-          WHERE budget_max <= $1 AND
+          SELECT * FROM cities
+          WHERE budget <= $1 AND
           preferences ~* $2;
       `;
 
@@ -512,6 +502,7 @@ app.post('/trip', (req, res) => {
           });
   } else {
       // Handle the request to plan a trip with a known destination
+      res.redirect('/calendar');
       return res.render('pages/search_api', {
         destination: session_tripInfo.destination,
       });
@@ -629,9 +620,6 @@ app.get('/search_events', async (req, res) => {
   }
 });
 
-
-
-
 app.get('/logout', (req, res) => {
   if (req.session) {
       req.session.destroy(err => {
@@ -645,5 +633,14 @@ app.get('/logout', (req, res) => {
       res.redirect('/login'); // Redirect directly if no session exists
   }
 });
+app.get('/calendar', (req, res) => {
+  if (!req.session.user || !req.session.tripInfo) {
+      return res.redirect('/login'); // Redirect if no session or trip info
+  }
 
+  // Render calendar page with session data
+  res.render('pages/calendar', {
+      tripInfo: req.session.tripInfo
+  });
+});
 module.exports = app.listen(3000);

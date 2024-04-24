@@ -1,32 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Calendar</title>
-    <!-- Add stylesheets and FullCalendar library -->
-    <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css' rel='stylesheet' />
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js'></script>
+    <meta charset="UTF-8">
+    <title>Your Trip Calendar</title>
+    <!-- Assuming '/styles/calendar.css' contains additional global styles -->
+    <link rel="stylesheet" href="/styles/calendar.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        #calendar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .calendar-day {
+            padding: 50px;
+            margin: 50px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+        }
+        .calendar-day-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            display: none;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+        }
+        .modal-content input,
+        .modal-content button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div id='calendar'></div>
+    <h1>Your Trip Calendar</h1>
+    <p>Trip to: {{tripInfo.destination}}</p>
+    <p>From: {{tripInfo.startDate}} to {{tripInfo.endDate}}</p>
+    <p>Budget: ${{tripInfo.budget}}</p>
+
+    <div id="calendar"></div>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <p>Enter info for <span id="modalDate"></span>:</p>
+            <textarea id="modalInfo" placeholder="Enter information here..."></textarea>
+            <button id="saveInfo">Save Information</button>
+        </div>
+    </div>
+
     <script>
-        $(document).ready(function() {
-            $('#calendar').fullCalendar({
-                header: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'month,agendaWeek,agendaDay'
-                },
-                editable: true,
-                events: '/fetch-events', // URL to get events from your server
-                dayClick: function(date, jsEvent, view) {
-                    // Function to handle day click, e.g., open a modal to add a new event
-                },
-                eventClick: function(calEvent, jsEvent, view) {
-                    // Function to handle event click, e.g., edit or delete event
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarContainer = document.getElementById('calendar');
+            const modal = document.getElementById('myModal');
+            const modalDate = document.getElementById('modalDate');
+            const modalInfo = document.getElementById('modalInfo');
+            const startDate = new Date('{{tripInfo.startDate}}');
+            const endDate = new Date('{{tripInfo.endDate}}');
+
+            function generateCalendar(startDate, endDate) {
+                let currentDate = new Date(startDate.getTime());
+                while (currentDate <= endDate) {
+                    const dayElem = document.createElement('div');
+                    const infoElem = document.createElement('div');
+                    dayElem.className = 'calendar-day';
+                    infoElem.className = 'calendar-day-info';
+                    dayElem.textContent = currentDate.toISOString().split('T')[0];
+                    dayElem.appendChild(infoElem);
+                    dayElem.onclick = function() { 
+                        showModal(this.textContent, infoElem); 
+                    };
+                    calendarContainer.appendChild(dayElem);
+                    currentDate.setDate(currentDate.getDate() + 1);
                 }
-            });
+            }
+
+            function showModal(date, infoElem) {
+                modal.style.display = "block";
+                modalDate.textContent = date;
+                modalInfo.value = localStorage.getItem(date) || ''; // Get saved info if any
+                document.getElementById('saveInfo').onclick = function() {
+                    localStorage.setItem(date, modalInfo.value); // Save info to local storage
+                    infoElem.textContent = modalInfo.value;
+                    infoElem.style.display = 'block';
+                    modal.style.display = "none";
+                };
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
+
+            generateCalendar(startDate, endDate);
         });
     </script>
 </body>
