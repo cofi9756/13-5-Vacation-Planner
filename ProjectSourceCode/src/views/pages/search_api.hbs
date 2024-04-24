@@ -1,49 +1,40 @@
 {{> message}}
-<div class="container mt-4">
+<body>
+    <div class="container mt-4">
+        <h4>What type of events would you like to attend in {{destination}}?</h4>
+        <caption>Select all that apply</caption>
         <form action="/search_events" method="GET" id="user_form">
-        <h3>Find events for your trip</h3>
-        <div class="form-group">
-            <label for="location">Where are you going?</label>
-            <input required type="text" class="form-control" name="location" id="location" placeholder="Enter a location">
-            <div class="row">
-                <div class="col">
-                    <label for="start_date">When will your trip begin?</label>
-                    <input required type="date" class="form-control" name="start_date" id="start_date" placeholder="Start date">
-                </div>
-                <div class="col">
-                    <label for="end_date">When will your trip end?</label>
-                    <input required type="date" class="form-control" name="end_date" id="end_date" placeholder="End date">
-                </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="music" id="music" name="music">
+                <label class="form-check-label" for="concerts">
+                    Music
+                </label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="expos" name="expos">
-                <label for="expos" class="form-check-label">Expos</label>
+                <input class="form-check-input" type="checkbox" value="sports" id="sports" name="sports">
+                <label class="form-check-label" for="sports">
+                    Sports
+                </label>
             </div>
-            <div class="form_check">
-                <input class="form-check-input" type="checkbox" value="" id="concerts" name="concerts">
-                <label for="concerts" class="form-check-label">Concerts</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="arts_theater" id="arts_theater" name="arts_theater">
+                <label class="form-check-label" for="arts_theater">
+                    Arts and Theater
+                </label>
             </div>
-            <div class="form_check">
-                <input class="form-check-input" type="checkbox" value="" id="festivals" name="festivals">
-                <label for="festivals" class="form-check-label">Festivals</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="family" id="family" name="family">
+                <label class="form-check-label" for="family">
+                    Family Events
+                </label>
             </div>
-            <div class="form_check">
-                <input class="form-check-input" type="checkbox" value="" id="performing-arts" name="performing-arts">
-                <label for="performing-arts" class="form-check-label">Performing Arts</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="miscellaneous" id="miscellaneous" name="miscellaneous">
+                <label class="form-check-label" for="miscellaneous">
+                    Miscellaneous
+                </label>
             </div>
-            <div class="form_check">
-                <input class="form-check-input" type="checkbox" value="" id="sports" name="performing-arts">
-                <label for="sports" class="form-check-label">Sports</label>
-            </div>
-            <div class="form_check">
-                <input class="form-check-input" type="checkbox" value="" id="conferences" name="conferences">
-                <label for="conferences" class="form-check-label">Conferences</label>
-            </div>
-            <div class="form_check">
-                <input class="form-check-input" type="checkbox" value="" id="community" name="community">
-                <label for="community" class="form-check-label">Community</label>
-            </div>
-        </div>
-        <button class="btn btn-primary" type="submit">Find Events</button>
-    </form>
-</div>
+            <button class="btn btn-primary" type="submit">Find Events</button>
+        </form>
+    </div>
+</body>

@@ -72,6 +72,12 @@ const user = {
 const session_destination = {destination: undefined,};
 const session_budget = {budget: undefined,};
 
+const session_tripInfo = {
+  destination: undefined,
+  startDate: undefined,
+  endDate: undefined
+};
+
 const saved_events = `
 SELECT DISTINCT
 ev.eventid, 
@@ -136,7 +142,7 @@ app.post('/login', async (req, res) => {
     if (req.session) {
         req.session.message = 'Username and password are required.';
     }
-    return res.redirect('/login');
+    return res.render('pages/login', {message: 'Please enter a valid username and password'});
   }
 
   try {
@@ -157,14 +163,14 @@ app.post('/login', async (req, res) => {
       if (req.session) {
           req.session.message = 'Invalid username or password.';
       }
-      return res.redirect('/login');
+      return res.render('pages/login', {message: 'Invalid username or password'});
     }
   } catch (error) {
     console.error('Error during login:', error);
     if (req.session) {
         req.session.message = 'An error occurred, please try again.';
     }
-    return res.redirect('/login');
+    return res.render('pages/login', {message: 'An error occurred while logging in, please try again'});
   }
 });
 
@@ -208,7 +214,7 @@ app.post('/register', async (req, res) => {
       'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
       [username, hashedPassword, email, first_name, last_name, date_of_birth]
     );
-    res.redirect('/login');
+    res.render('pages/login', {message: 'Thank you for creating an account with us. Log in to begin planning your next trip!'});
   } catch (error) {
     console.error('Error during registration:', error);
     if (error.code === '23505') {
@@ -389,16 +395,6 @@ app.get('/deleteSaved_event', (req, res) => {
   });
 });
 
-/*
-when the endpoint is written for these, render the events page with the events data structure like done in the /events endpoint 
-searching events based on city_name
-SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE city_name = $1;
-searching events based on country_name
-SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE country_name = $1;
-basic search based on preference data if we are still planning on doing that (this is probabaly not going to work, but its a skeleton)
-SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid WHERE e.preference_data LIKE '%[$1]%' OR ci.preference_data LIKE '%[$2]%' OR c.preference_data '%[$3]';
-*/
-
 app.get('/search', (req, res) => {
   res.render('pages/search');
 });
@@ -446,41 +442,6 @@ app.get('/user', (req, res) => {
   }
 });
 
-// app.post('/trip', (req, res) => {
-//   if (!req.session.user) {
-//       return res.redirect('/login'); // Redirect to login if not authenticated
-//   }
-
-//   const { destination, budget} = req.body;
-//   console.log('Trip details:', { destination, budget});
-
-//   const saved = req.query.saved;
-//   userid = req.session.user.userid;
-//   req.session.session_destination = {destination: destination};
-//   req.session.session_budget = {budget: budget};
-  
-//   db.any(saved ? saved_events : all_events, [req.session.user.userid, destination, budget])
-//   .then(events => {
-//       console.log(events);
-//       res.render('pages/events', {
-//         destination,
-//         budget,
-//         userid,
-//         events,
-//         action: req.query.saved ? 'delete' : 'add',
-//       });
-//     })
-//     .catch(err => {
-//       res.render('pages/events', {
-//         userid,
-//         destination,
-//         budget,
-//         events: [],
-//         error: true,
-//       });
-//     }); // Redirect to a confirmation or next step page
-// });
-
 app.get('/api/cities', async (req, res) => {
   const searchTerm = req.query.q;
   if (!searchTerm) {
@@ -508,11 +469,15 @@ app.post('/trip', (req, res) => {
   const { destination, budget, startDate, endDate } = req.body;
   let { tripPreferences } = req.body;
 
+  session_tripInfo.destination = destination;
+  session_tripInfo.startDate = startDate;
+  session_tripInfo.endDate = endDate;
+
   // Ensure tripPreferences is always an array
   if (!Array.isArray(tripPreferences)) {
       tripPreferences = [tripPreferences]; // Wrap it in an array if it's not
   }
-
+  req.session.tripInfo = { destination, budget, startDate, endDate, tripPreferences };
   const userid = req.session.user.userid;
   const preferencesPattern = tripPreferences.join('|'); // Now safe to use join
 
@@ -537,30 +502,10 @@ app.post('/trip', (req, res) => {
           });
   } else {
       // Handle the request to plan a trip with a known destination
-      const saved = req.query.saved;
-      db.any(saved ? saved_events : all_events, [userid, destination, budget])
-          .then(events => {
-              console.log('Events:', events);
-              // res.render('pages/events', {
-              //     destination,
-              //     budget,
-              //     userid,
-              //     events,
-              //     action: req.query.saved ? 'delete' : 'add',
-              // });
-              res.redirect('/search_api', {start_date: startDate, end_date: endDate, location: destination})
-          })
-          .catch(err => {
-              console.error('Error processing events:', err);
-              // res.render('pages/events', {
-              //     userid,
-              //     destination,
-              //     budget,
-              //     events: [],
-              //     error: true,
-              // });
-              res.render('pages/home', {message: 'Error finding events'});
-          });
+      res.redirect('/calendar');
+      return res.render('pages/search_api', {
+        destination: session_tripInfo.destination,
+      });
   }
 });
 
@@ -573,87 +518,36 @@ const auth = (req,res,next) => {
 
 app.use(auth);
 
-app.get('/smart_search', (req, res) => {
-  res.render('pages/search_api');
+app.get('/select_event_type', (req, res) => {
+  res.render('pages/search_api', {
+    destination: session_tripInfo.destination,
+  });
 });
 
-// app.get('/search_api', async (req, res) => {
-//   const location = req.query.location;
-//   const start_date = req.query.start_date;
-//   const end_date = req.query.end_date;
-//   const categories = [];
-//     if (req.query.expos) categories.push('expos');
-//     if (req.query.concerts) categories.push('concerts');
-//     if (req.query.festivals) categories.push('festivals');
-//     if (req.query.performing_arts) categories.push('performing-arts');
-//     if (req.query.sports) categories.push('sports');
-//     if (req.query.conferences) categories.push('conferences');
-//     if (req.query.community) categories.push('community');  
+app.get('/search_events', async (req, res) => {
+  const categories = [];
+  if (req.query.music) categories.push('music');
+  if (req.query.sports) categories.push('sports');
+  if (req.query.arts_theater) categories.push('arts & theater');
+  if (req.query.family) categories.push('family');
+  if (req.query.miscellaneous) categories.push('miscellaneous');
 
-//     try {
-//       const locationResponse = await axios({
-//         url: 'https://api.predicthq.com/v1/places/',
-//         method: 'GET',
-//         headers: {
-//           'Authorization': `Bearer ${process.env.API_KEY}`,
-//           'Accept': 'application/json'
-//         },
-//         params: {
-//           q: location,
-//           limit: 1
-//         }
-//       });
-  
-//       if (locationResponse.data.results.length === 0) {
-//         return res.render('pages/search_api', { message: 'Invalid location' });
-//       }
-  
-//       const location_id = locationResponse.data.results[0].id;
-//       const location_name = locationResponse.data.results[0].name;
-  
-//       try {
-//         const eventsResponse = await axios({
-//           url: 'https://api.predicthq.com/v1/events/',
-//           method: 'GET',
-//           headers: {
-//             'Authorization': `Bearer ${process.env.API_KEY}`,
-//             'Accept': 'application/json'
-//           },
-//           params: {
-//             'place.scope': location_id,
-//             'active.gte': start_date,
-//             'active.lte': end_date,
-//             'category': categories.join(),
-//             'limit': 10,
-//           }
-//         });
-  
-//         if (eventsResponse.data.results.length === 0) {
-//           return res.render('pages/search_api', { message: 'Could not find any events with selected options' });
-//         }
-  
-//         const results = eventsResponse.data.results.map(event => ({
-//           title: event.title,
-//           start: event.start,
-//           end: event.end,
-//           category: event.category,
-//           description: event.description
-//         }));
-  
-//         res.render('pages/events_api', { events: results });
-//       } catch (error) {
-//         console.error('Error fetching events:', error);
-//         res.render('pages/search_api', { message: `Error finding events in ${location_name} with selected options` });
-//       }
-//     } catch (error) {
-//       console.error('Error finding location:', error);
-//       res.render('pages/search_api', {
-//         message: 'Error finding location'
-//       });
-//     }
-// });
 
-app.get('/search_api', async (req, res) => {
+  if(categories.length === 0) {
+    return res.render('pages/search_api', {
+      destination: session_tripInfo.destination, 
+      message: 'Please select at least one event type'
+    });
+  }
+
+  destination = session_tripInfo.destination;
+  startDate = session_tripInfo.startDate;
+  endDate = session_tripInfo.endDate;
+  
+  console.log(categories);
+  console.log(startDate, endDate, destination);
+  
+
   try {
     const response = await axios({
       url: `https://app.ticketmaster.com/discovery/v2/events.json`,
@@ -664,9 +558,10 @@ app.get('/search_api', async (req, res) => {
         },
         params: {
           apikey: process.env.API_KEY,
-          startDateTime: start_date,
-          endDateTime: end_date,
-          city: [location]
+          startDateTime: startDate,
+          endDateTime: endDate,
+          city: [destination],
+          classificationName: categories,
         }
     });
 
@@ -674,15 +569,12 @@ app.get('/search_api', async (req, res) => {
       return res.render('pages/home', { message: 'No events found'});
     }
 
-    res.render('pages/events_api', {events: response.data._embedded.events,});
+    return res.render('pages/events_api', {events: response.data._embedded.events,});
   }
   catch (error) {
-    res.render('pages/home',{message: 'Error finding events'});
+    return res.render('pages/home',{message: 'Error finding events'});
   }
 });
-
-
-
 
 app.get('/logout', (req, res) => {
   if (req.session) {
@@ -691,11 +583,20 @@ app.get('/logout', (req, res) => {
               console.error('Failed to destroy the session during logout.', err);
           }
           res.clearCookie('connect.sid'); // This is the default session cookie name used by express-session middleware
-          res.redirect('/login');
+          res.redirect('/login', {message: 'Logout successful!'});
       });
   } else {
       res.redirect('/login'); // Redirect directly if no session exists
   }
 });
+app.get('/calendar', (req, res) => {
+  if (!req.session.user || !req.session.tripInfo) {
+      return res.redirect('/login'); // Redirect if no session or trip info
+  }
 
+  // Render calendar page with session data
+  res.render('pages/calendar', {
+      tripInfo: req.session.tripInfo
+  });
+});
 module.exports = app.listen(3000);
