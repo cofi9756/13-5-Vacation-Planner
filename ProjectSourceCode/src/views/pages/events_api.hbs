@@ -10,3 +10,27 @@
             </div>
     </div>
 </body> --}}
+{{> message}}
+<body>
+    <div class="container mt-5">
+        <h2>Discover Events</h2>
+            <div class="row">
+                {{#each events}}
+                    <div class="col-md-4 mb-4">
+                        <div class="card">
+                            {{#if this.images}}
+                                <img src="{{this.images.url}}" class="card-img-top" alt="{{this.name}}">
+                            {{else}}
+                                <img src="/default/image" class="card-img-top" alt="Default Image">
+                            {{/if}}
+                            <div class="card-body">
+                                <h5 class="card-title">{{this.name}}</h5>
+                                <p class="card-text">{{this.dates.start.localDate}} at {{this.dates.start.localTime}}</p>
+                                <a href="{{this._links.self.href}}" class="btn btn-primary" target="_blank">Book Now</a>
+                            </div>
+                        </div>
+                    </div>
+                {{/each}}
+            </div>
+    </div>
+</body>

@@ -545,13 +545,15 @@ app.post('/trip', (req, res) => {
           })
           .catch(err => {
               console.error('Error processing events:', err);
-              res.render('pages/events', {
-                  userid,
-                  destination,
-                  budget,
-                  events: [],
-                  error: true,
-              });
+              // res.render('pages/events', {
+              //     userid,
+              //     destination,
+              //     budget,
+              //     events: [],
+              //     error: true,
+              // });
+              res.redirect('/search_api', 
+                {start_date: startDate, end_date: endDate, location: destination});
           });
   }
 });
@@ -569,81 +571,113 @@ app.get('/smart_search', (req, res) => {
   res.render('pages/search_api');
 });
 
-app.get('/search_api', async (req, res) => {
-  const location = req.query.location;
-  const start_date = req.query.start_date;
-  const end_date = req.query.end_date;
-  const categories = [];
-    if (req.query.expos) categories.push('expos');
-    if (req.query.concerts) categories.push('concerts');
-    if (req.query.festivals) categories.push('festivals');
-    if (req.query.performing_arts) categories.push('performing-arts');
-    if (req.query.sports) categories.push('sports');
-    if (req.query.conferences) categories.push('conferences');
-    if (req.query.community) categories.push('community');  
+// app.get('/search_api', async (req, res) => {
+//   const location = req.query.location;
+//   const start_date = req.query.start_date;
+//   const end_date = req.query.end_date;
+//   const categories = [];
+//     if (req.query.expos) categories.push('expos');
+//     if (req.query.concerts) categories.push('concerts');
+//     if (req.query.festivals) categories.push('festivals');
+//     if (req.query.performing_arts) categories.push('performing-arts');
+//     if (req.query.sports) categories.push('sports');
+//     if (req.query.conferences) categories.push('conferences');
+//     if (req.query.community) categories.push('community');  
 
-    try {
-      const locationResponse = await axios({
-        url: 'https://api.predicthq.com/v1/places/',
+//     try {
+//       const locationResponse = await axios({
+//         url: 'https://api.predicthq.com/v1/places/',
+//         method: 'GET',
+//         headers: {
+//           'Authorization': `Bearer ${process.env.API_KEY}`,
+//           'Accept': 'application/json'
+//         },
+//         params: {
+//           q: location,
+//           limit: 1
+//         }
+//       });
+  
+//       if (locationResponse.data.results.length === 0) {
+//         return res.render('pages/search_api', { message: 'Invalid location' });
+//       }
+  
+//       const location_id = locationResponse.data.results[0].id;
+//       const location_name = locationResponse.data.results[0].name;
+  
+//       try {
+//         const eventsResponse = await axios({
+//           url: 'https://api.predicthq.com/v1/events/',
+//           method: 'GET',
+//           headers: {
+//             'Authorization': `Bearer ${process.env.API_KEY}`,
+//             'Accept': 'application/json'
+//           },
+//           params: {
+//             'place.scope': location_id,
+//             'active.gte': start_date,
+//             'active.lte': end_date,
+//             'category': categories.join(),
+//             'limit': 10,
+//           }
+//         });
+  
+//         if (eventsResponse.data.results.length === 0) {
+//           return res.render('pages/search_api', { message: 'Could not find any events with selected options' });
+//         }
+  
+//         const results = eventsResponse.data.results.map(event => ({
+//           title: event.title,
+//           start: event.start,
+//           end: event.end,
+//           category: event.category,
+//           description: event.description
+//         }));
+  
+//         res.render('pages/events_api', { events: results });
+//       } catch (error) {
+//         console.error('Error fetching events:', error);
+//         res.render('pages/search_api', { message: `Error finding events in ${location_name} with selected options` });
+//       }
+//     } catch (error) {
+//       console.error('Error finding location:', error);
+//       res.render('pages/search_api', {
+//         message: 'Error finding location'
+//       });
+//     }
+// });
+
+app.get('/search_api', async (req, res) => {
+  try {
+    const response = await axios({
+      url: `https://app.ticketmaster.com/discovery/v2/events.json`,
         method: 'GET',
+        dataType: 'json',
         headers: {
-          'Authorization': `Bearer ${process.env.API_KEY}`,
-          'Accept': 'application/json'
+          'Accept-Encoding': 'application/json',
         },
         params: {
-          q: location,
-          limit: 1
+          apikey: process.env.API_KEY,
+          startDateTime: start_date,
+          endDateTime: end_date,
+          city: [location]
         }
-      });
-  
-      if (locationResponse.data.results.length === 0) {
-        return res.render('pages/search_api', { message: 'Invalid location' });
-      }
-  
-      const location_id = locationResponse.data.results[0].id;
-      const location_name = locationResponse.data.results[0].name;
-  
-      try {
-        const eventsResponse = await axios({
-          url: 'https://api.predicthq.com/v1/events/',
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${process.env.API_KEY}`,
-            'Accept': 'application/json'
-          },
-          params: {
-            'place.scope': location_id,
-            'active.gte': start_date,
-            'active.lte': end_date,
-            'category': categories.join(),
-            'limit': 10,
-          }
-        });
-  
-        if (eventsResponse.data.results.length === 0) {
-          return res.render('pages/search_api', { message: 'Could not find any events with selected options' });
-        }
-  
-        const results = eventsResponse.data.results.map(event => ({
-          title: event.title,
-          start: event.start,
-          end: event.end,
-          category: event.category,
-          description: event.description
-        }));
-  
-        res.render('pages/events_api', { events: results });
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        res.render('pages/search_api', { message: `Error finding events in ${location_name} with selected options` });
-      }
-    } catch (error) {
-      console.error('Error finding location:', error);
-      res.render('pages/search_api', {
-        message: 'Error finding location'
-      });
+    });
+
+    if(response.data._embedded.events.length === 0) {
+      return res.render('pages/home', { message: 'No events found'});
     }
+
+    res.render('pages/events_api', {events: response.data._embedded.events,});
+  }
+  catch (error) {
+    res.render('pages/home',{message: 'Error finding events'});
+  }
 });
+
+
+
+
 app.get('/logout', (req, res) => {
   if (req.session) {
       req.session.destroy(err => {
