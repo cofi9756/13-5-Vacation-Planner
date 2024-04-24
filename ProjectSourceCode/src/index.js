@@ -554,6 +554,7 @@ const auth = (req,res,next) => {
   if (!req.session.user) {
     return res.redirect('/login');  // default redirect to login page
   }
+  next();
 }
 
 app.use(auth);
@@ -617,7 +618,7 @@ app.get('/search_api', async (req, res) => {
           return res.render('pages/search_api', { message: 'Could not find any events with selected options' });
         }
   
-        const events = eventsResponse.data.results.map(event => ({
+        const results = eventsResponse.data.results.map(event => ({
           title: event.title,
           start: event.start,
           end: event.end,
@@ -625,7 +626,7 @@ app.get('/search_api', async (req, res) => {
           description: event.description
         }));
   
-        res.render('pages/search_api', { events: events, message: 'Events found' }); // Ensuring response is sent
+        res.render('pages/events_api', { events: results });
       } catch (error) {
         console.error('Error fetching events:', error);
         res.render('pages/search_api', { message: `Error finding events in ${location_name} with selected options` });

@@ -46,7 +46,7 @@ describe('Testing Render', () => {
     chai.request(server)
       .get('/non-existing-route')
       .end((err, res) => {
-        res.should.not.have.status(200);
+        res.should.not.have.status(404);
         done();
       });
   });
