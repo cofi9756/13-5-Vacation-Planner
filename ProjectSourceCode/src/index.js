@@ -548,7 +548,8 @@ app.post('/trip', (req, res) => {
               //     events,
               //     action: req.query.saved ? 'delete' : 'add',
               // });
-              res.redirect('/search_api', {start_date: startDate, end_date: endDate, location: destination})
+              res.redirect(`/search_api?start_date=${startDate}&end_date=${endDate}&location=${encodeURIComponent(destination)}`);
+
           })
           .catch(err => {
               console.error('Error processing events:', err);
@@ -674,10 +675,10 @@ app.get('/search_api', async (req, res) => {
       return res.render('pages/home', { message: 'No events found'});
     }
 
-    res.render('pages/events_api', {events: response.data._embedded.events,});
+    return res.render('pages/events_api', {events: response.data._embedded.events,});
   }
   catch (error) {
-    res.render('pages/home',{message: 'Error finding events'});
+    return res.render('pages/home',{message: 'Error finding events'});
   }
 });
 
