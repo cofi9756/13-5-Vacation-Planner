@@ -541,6 +541,8 @@ app.get('/search_events', async (req, res) => {
   if (req.query.family) categories.push('family');
   if (req.query.miscellaneous) categories.push('miscellaneous');
 
+  const categoryString = categories.join(',');
+
   if(categories.length === 0) {
     return res.render('pages/search_api', {
       destination: session_tripInfo.destination, 
@@ -549,8 +551,8 @@ app.get('/search_events', async (req, res) => {
   }
 
   const destination = session_tripInfo.destination;
-  const startDate = new Date(session_tripInfo.startDate).toISOString();
-  const endDate = new Date(session_tripInfo.endDate).toISOString();
+  const startDate = new Date(session_tripInfo.startDate).toISOString().replace(/\.\d{3}/, '');
+  const endDate = new Date(session_tripInfo.endDate).toISOString().replace(/\.\d{3}/, '');
 
   console.log(categories);
   console.log(startDate);
@@ -569,7 +571,7 @@ app.get('/search_events', async (req, res) => {
         startDateTime: startDate,
         endDateTime: endDate,
         city: destination,  // Try as a string if the array format causes issues
-        classificationName: categories,
+        classificationName: categoryString,
       }
     });
 
