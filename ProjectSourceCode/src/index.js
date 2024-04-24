@@ -617,6 +617,7 @@ app.get('/search_events', async (req, res) => {
       url: event.url
     }));
 
+    console.log(events);
     res.render('pages/events_api', {events});
   }
   catch (error) {
