@@ -8,6 +8,8 @@ const handlebars = require('express-handlebars');
 const Handlebars = require('handlebars');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const axios = require('axios');
+
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
   extname: 'hbs',
@@ -69,6 +71,12 @@ const user = {
 };
 const session_destination = {destination: undefined,};
 const session_budget = {budget: undefined,};
+
+const session_tripInfo = {
+  destination: undefined,
+  startDate: undefined,
+  endDate: undefined
+};
 
 const saved_events = `
 SELECT DISTINCT
@@ -134,7 +142,7 @@ app.post('/login', async (req, res) => {
     if (req.session) {
         req.session.message = 'Username and password are required.';
     }
-    return res.redirect('/login');
+    return res.render('pages/login', {message: 'Please enter a valid username and password'});
   }
 
   try {
@@ -155,14 +163,14 @@ app.post('/login', async (req, res) => {
       if (req.session) {
           req.session.message = 'Invalid username or password.';
       }
-      return res.redirect('/login');
+      return res.render('pages/login', {message: 'Invalid username or password'});
     }
   } catch (error) {
     console.error('Error during login:', error);
     if (req.session) {
         req.session.message = 'An error occurred, please try again.';
     }
-    return res.redirect('/login');
+    return res.render('pages/login', {message: 'An error occurred while logging in, please try again'});
   }
 });
 
@@ -173,45 +181,51 @@ app.get('/register', (req, res) =>
 });
 
 app.post('/register', async (req, res) => {
-  const {username, password, email, first_name, last_name, date_of_birth } = req.body;
-  let errors = []; // \S = any amount of characters that aren't a space or tab 
-  if(!username || username.length < 6) {
-      errors.push({ msg: "Username must be at least 6 characters long" });
+  const { username, password, email, first_name, last_name, date_of_birth } = req.body;
+  let errors = [];
+
+  if (!username || username.length < 6) {
+    errors.push("Username must be at least 6 characters long.");
   }
-  if (!email || !/\S+@\S+\.\S+/.test(email)) { //I think thats regexp code for valid emails
-      errors.push({ msg: "Please enter a valid email address." });
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    errors.push("Please enter a valid email address.");
   }
   if (!password || password.length < 6) {
-      errors.push({ msg: "Password must be at least 6 characters long." });
+    errors.push("Password must be at least 6 characters long.");
   }
   if (!first_name) {
-      errors.push({ msg: "First name is required." });
+    errors.push("First name is required.");
   }
   if (!last_name) {
-      errors.push({ msg: "Last name is required." });
+    errors.push("Last name is required.");
   }
+
   if (errors.length > 0) {
-      return res.status(400).json({ errors });
+    // Render the register page again with the error messages
+    return res.render('pages/register', {
+      errors: errors,
+      username, email, first_name, last_name, date_of_birth // Preserve user input
+    });
   }
 
-  try{
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-      await db.none(
-          'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
-          [username, hashedPassword, email, first_name, last_name, date_of_birth] //don't we also want username from db? 
-      );
-
-      res.redirect('/login');
-  } 
-  catch (error){
-      console.error('Error during registration:', error);
-      if (req.session) {
-          req.session.message = 'Could not register, try again';
-      }
-      res.redirect('/register');
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.none(
+      'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
+      [username, hashedPassword, email, first_name, last_name, date_of_birth]
+    );
+    res.render('pages/login', {message: 'Thank you for creating an account with us. Log in to begin planning your next trip!'});
+  } catch (error) {
+    console.error('Error during registration:', error);
+    if (error.code === '23505') {
+      errors.push("Username or email already exists.");
+    } else {
+      errors.push('Unexpected error during registration, please try again.');
+    }
+    res.render('pages/register', { errors, username, email, first_name, last_name, date_of_birth });
   }
 });
+
 
 app.get('/events', (req, res) => {
   if (!req.session.user) {
@@ -438,41 +452,6 @@ app.get('/user', (req, res) => {
   }
 });
 
-// app.post('/trip', (req, res) => {
-//   if (!req.session.user) {
-//       return res.redirect('/login'); // Redirect to login if not authenticated
-//   }
-
-//   const { destination, budget} = req.body;
-//   console.log('Trip details:', { destination, budget});
-
-//   const saved = req.query.saved;
-//   userid = req.session.user.userid;
-//   req.session.session_destination = {destination: destination};
-//   req.session.session_budget = {budget: budget};
-  
-//   db.any(saved ? saved_events : all_events, [req.session.user.userid, destination, budget])
-//   .then(events => {
-//       console.log(events);
-//       res.render('pages/events', {
-//         destination,
-//         budget,
-//         userid,
-//         events,
-//         action: req.query.saved ? 'delete' : 'add',
-//       });
-//     })
-//     .catch(err => {
-//       res.render('pages/events', {
-//         userid,
-//         destination,
-//         budget,
-//         events: [],
-//         error: true,
-//       });
-//     }); // Redirect to a confirmation or next step page
-// });
-
 app.get('/api/cities', async (req, res) => {
   const searchTerm = req.query.q;
   if (!searchTerm) {
@@ -497,54 +476,172 @@ app.post('/trip', (req, res) => {
       return res.redirect('/login'); // Redirect to login if not authenticated
   }
 
-  const { destination, budget, tripPreferences, startDate, endDate } = req.body;
-  const userid = req.session.user.userid;
+  const { destination, budget, startDate, endDate } = req.body;
+  let { tripPreferences } = req.body;
 
-  req.session.session_destination = { destination: destination };
-  req.session.session_budget = { budget: budget };
+  session_tripInfo.destination = destination;
+  session_tripInfo.startDate = startDate;
+  session_tripInfo.endDate = endDate;
+
+  // Ensure tripPreferences is always an array
+  if (!Array.isArray(tripPreferences)) {
+      tripPreferences = [tripPreferences]; // Wrap it in an array if it's not
+  }
+
+  const userid = req.session.user.userid;
+  const preferencesPattern = tripPreferences.join('|'); // Now safe to use join
 
   if (destination === '') {
-      // User asked for a recommendation
-      const preferencesPattern = tripPreferences.split(',').map(pref => `%${pref}%`).join('|');
-
-      // Since only maximum budget is considered, update the query accordingly
       const sqlQuery = `
           SELECT * FROM locations
-          WHERE budget_max >= $1 AND preferences ~* $2;
+          WHERE budget_max <= $1 AND
+          preferences ~* $2;
       `;
 
       db.any(sqlQuery, [budget, preferencesPattern])
         .then(results => {
-            res.render('pages/recommend', { locations: results });
+            if (results.length > 0) {
+                res.render('pages/recommend', { locations: results });
+            } else {
+                res.render('pages/recommend', { locations: [], message: "No matching locations found." });
+            }
         })
-        .catch(error => {
-            console.error('Error fetching destinations:', error);
-            res.status(500).send('Error fetching destinations');
-        });
+          .catch(error => {
+              console.error('Error fetching destinations:', error);
+              res.status(500).send('Error fetching destinations');
+          });
   } else {
       // Handle the request to plan a trip with a known destination
-      const saved = req.query.saved;
-      db.any(saved ? saved_events : all_events, [userid, destination, budget])
-          .then(events => {
-              console.log('Events:', events);
-              res.render('pages/events', {
-                  destination,
-                  budget,
-                  userid,
-                  events,
-                  action: req.query.saved ? 'delete' : 'add',
-              });
-          })
-          .catch(err => {
-              console.error('Error processing events:', err);
-              res.render('pages/events', {
-                  userid,
-                  destination,
-                  budget,
-                  events: [],
-                  error: true,
-              });
-          });
+      return res.render('pages/search_api', {
+        destination: session_tripInfo.destination,
+      });
+  }
+});
+
+const auth = (req,res,next) => {
+  if (!req.session.user) {
+    return res.redirect('/login');  // default redirect to login page
+  }
+  next();
+}
+
+app.use(auth);
+
+app.get('/select_event_type', (req, res) => {
+  res.render('pages/search_api', {
+    destination: session_tripInfo.destination,
+  });
+});
+
+app.get('/search_events', async (req, res) => {
+  const categories = [];
+  if (req.query.music) categories.push('music');
+  if (req.query.sports) categories.push('sports');
+  if (req.query.arts_theater) categories.push('arts & theater');
+  if (req.query.family) categories.push('family');
+  if (req.query.miscellaneous) categories.push('miscellaneous');
+
+
+  if(categories.length === 0) {
+    return res.render('pages/search_api', {
+      destination: session_tripInfo.destination, 
+      message: 'Please select at least one event type'
+    });
+  }
+
+  const destination = session_tripInfo.destination;
+  const startDate = new Date(session_tripInfo.startDate).toISOString();
+  const endDate = new Date(session_tripInfo.endDate).toISOString();
+
+
+  console.log(categories);
+  console.log(startDate, endDate, destination);
+  
+  // try 
+  // {
+  //     const response = await axios({
+  //         url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+  //         method: 'GET',
+  //         headers: {
+  //             'Accept-Encoding': 'application/json',
+  //         },
+  //         params: {
+  //             apikey: process.env.API_KEY,
+  //             keyword: 'concert',
+  //             size: 10
+  //         },
+  //     });
+
+  //     const events = response.data._embedded.events.map(event => ({
+  //         name: event.name,
+  //         date: event.dates.start.dateTime,
+  //         image: event.images[0].url,
+  //         url: event.url
+  //     }));
+
+  //     res.render('pages/events_api', { events });
+  // } 
+  // catch (error) 
+  // {
+  //     console.error(error);
+  //     res.render('pages/events_api', { events: [], message: 'Could not load events' });
+  // }
+
+  try {
+    const response = await axios({
+      url: `https://app.ticketmaster.com/discovery/v2/events.json`,
+      method: 'GET',
+      headers: {
+        'Accept-Encoding': 'application/json',
+      },
+      params: {
+        apikey: process.env.API_KEY,
+        startDateTime: startDate,
+        endDateTime: endDate,
+        city: [destination],
+        classificationName: categories,
+      }
+    });
+
+    if(response.data._embedded.events.length === 0) {
+      return res.render('pages/home', { 
+        user: req.session.user, 
+        message: 'No events found',
+      });
+    }
+
+    const events = response.data._embedded.events.map(event => ({
+      name: event.name,
+      date: event.dates.start.dateTime,
+      image: event.images[0].url,
+      url: event.url
+    }));
+
+    res.render('pages/events_api', {events});
+  }
+  catch (error) {
+    console.error(error);
+    res.render('pages/home', {
+      user: req.session.user,
+      message: 'Error finding events',
+    });
+  }
+});
+
+
+
+
+app.get('/logout', (req, res) => {
+  if (req.session) {
+      req.session.destroy(err => {
+          if (err) {
+              console.error('Failed to destroy the session during logout.', err);
+          }
+          res.clearCookie('connect.sid'); // This is the default session cookie name used by express-session middleware
+          res.render('pages/login', {message: 'Logout successful!'});
+      });
+  } else {
+      res.redirect('/login'); // Redirect directly if no session exists
   }
 });
 

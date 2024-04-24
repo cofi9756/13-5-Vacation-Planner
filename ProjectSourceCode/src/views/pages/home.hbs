@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Nomad Nexus</title>
 </head>
+{{> message}}
 <body style="font-family: 'Arial', sans-serif; color: #333; padding: 20px; background-color: #f8f8f8; text-align: center;">
     {{#if user}}
         <h1 style="color: #4a90e2;">Welcome, {{user.first_name}}!</h1>
@@ -13,6 +14,8 @@
             <div style="margin-bottom: 20px;">
                 <input type="radio" id="choose" name="tripType" value="choose" checked onclick="toggleFormFields()">
                 <label for="choose">I know where I want to go</label>
+            </div>
+            <div style="margin-bottom: 20px;">
                 <input type="radio" id="recommend" name="tripType" value="recommend" onclick="toggleFormFields()">
                 <label for="recommend">Recommend a destination</label>
             </div>
@@ -256,10 +259,6 @@
     destinationInput.addEventListener('blur', function() {
         dataList.innerHTML = ''; // Clear the datalist when input loses focus
     });
-
-    
-
-
         </script>
 </body>
 </html>

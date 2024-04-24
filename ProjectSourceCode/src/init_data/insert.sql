@@ -362,6 +362,12 @@ INSERT INTO images (eventid, image_link, image_desc) VALUES
 (100, 'https://example.com/film_festival4.jpg', 'Film festival in Delhi.');
 
 --Temp table to get recommendation page working
-INSERT INTO locations (name, budget_max, preferences)
-VALUES ('Cape Town', 3000, 'beach,mountains,city');
+INSERT INTO locations (name, budget_max, preferences) VALUES 
+('Cape Town', 3000, 'beach,mountains,city'),
+('Boulder', 3000, 'mountains,city'),
+('a', 3000, 'beach,mountains'),
+('b', 4000, 'city'),
+('c', 2000, 'mountains'),
+('d', 1000, 'beach');
+
 

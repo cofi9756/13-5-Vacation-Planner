@@ -1,11 +1,17 @@
-{{> head}}
 <body>
     <div style="display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px;">
         <h1 style="color: #333;">Register</h1>
         <form action="/register" method="POST" style="width: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px; border-radius: 8px; display: flex; flex-direction: column; gap: 15px;">
+            {{#if errors}}
+                <div style="color: red; margin-bottom: 15px;">
+                    {{#each errors}}
+                        <p>{{this}}</p>
+                    {{/each}}
+                </div>
+             {{/if}}
             <div>
                 <label for="username" style="display: block; font-size: 16px; color: #555;">Username:</label>
-                <input type="text" id="username" name="username" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="text" id="username" name="username" value="{{username}}" required placeholder="Username" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
             </div>
             <div>
                 <label for="password" style="display: block; font-size: 16px; color: #555;">Password:</label>
