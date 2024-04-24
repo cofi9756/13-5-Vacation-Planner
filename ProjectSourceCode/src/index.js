@@ -541,7 +541,6 @@ app.get('/search_events', async (req, res) => {
   if (req.query.family) categories.push('family');
   if (req.query.miscellaneous) categories.push('miscellaneous');
 
-
   if(categories.length === 0) {
     return res.render('pages/search_api', {
       destination: session_tripInfo.destination, 
@@ -553,39 +552,10 @@ app.get('/search_events', async (req, res) => {
   const startDate = new Date(session_tripInfo.startDate).toISOString();
   const endDate = new Date(session_tripInfo.endDate).toISOString();
 
-
   console.log(categories);
-  console.log(startDate, endDate, destination);
-  
-  // try 
-  // {
-  //     const response = await axios({
-  //         url: 'https://app.ticketmaster.com/discovery/v2/events.json',
-  //         method: 'GET',
-  //         headers: {
-  //             'Accept-Encoding': 'application/json',
-  //         },
-  //         params: {
-  //             apikey: process.env.API_KEY,
-  //             keyword: 'concert',
-  //             size: 10
-  //         },
-  //     });
-
-  //     const events = response.data._embedded.events.map(event => ({
-  //         name: event.name,
-  //         date: event.dates.start.dateTime,
-  //         image: event.images[0].url,
-  //         url: event.url
-  //     }));
-
-  //     res.render('pages/events_api', { events });
-  // } 
-  // catch (error) 
-  // {
-  //     console.error(error);
-  //     res.render('pages/events_api', { events: [], message: 'Could not load events' });
-  // }
+  console.log(startDate);
+  console.log(endDate);
+  console.log(destination);
 
   try {
     const response = await axios({
@@ -598,12 +568,12 @@ app.get('/search_events', async (req, res) => {
         apikey: process.env.API_KEY,
         startDateTime: startDate,
         endDateTime: endDate,
-        city: [destination],
+        city: destination,  // Try as a string if the array format causes issues
         classificationName: categories,
       }
     });
 
-    if(response.data._embedded.events.length === 0) {
+    if(response.data._embedded && response.data._embedded.events.length === 0) {
       return res.render('pages/home', { 
         user: req.session.user, 
         message: 'No events found',
@@ -620,9 +590,9 @@ app.get('/search_events', async (req, res) => {
     res.render('pages/events_api', {events});
   }
   catch (error) {
-    console.error(error);
-    res.render('pages/home', {
-      user: req.session.user,
+    console.error('API Error:', error.response ? error.response.data : error.message);
+    res.render('pages/events_api', {
+      events: [],
       message: 'Error finding events',
     });
   }
