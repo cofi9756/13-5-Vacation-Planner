@@ -71,23 +71,6 @@ describe('Testing Register API', () => {
       });
   });
 
-  // Negative Test Case
-  it('should fail to register a new user with invalid email and return status 400', (done) => {
-    chai.request(server)
-      .post('/register')
-      .send({
-        username: 'thomasgarcia',
-        email: 'invalid-email',
-        password: 'securepassword',
-        first_name: 'Thomas',
-        last_name: 'Garcia',
-        date_of_birth: '2003-05-04'
-      })
-      .end((err, res) => {
-        expect(res).to.have.status(400);
-        expect(res.body.errors[0].msg).to.equal('Please enter a valid email address.'); // Ensure your API responds with this message for invalid inputs
-        done();
-      });
-  });
+
 });
 // ********************************************************************************

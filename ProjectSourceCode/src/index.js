@@ -175,45 +175,51 @@ app.get('/register', (req, res) =>
 });
 
 app.post('/register', async (req, res) => {
-  const {username, password, email, first_name, last_name, date_of_birth } = req.body;
-  let errors = []; // \S = any amount of characters that aren't a space or tab 
-  if(!username || username.length < 6) {
-      errors.push({ msg: "Username must be at least 6 characters long" });
+  const { username, password, email, first_name, last_name, date_of_birth } = req.body;
+  let errors = [];
+
+  if (!username || username.length < 6) {
+    errors.push("Username must be at least 6 characters long.");
   }
-  if (!email || !/\S+@\S+\.\S+/.test(email)) { //I think thats regexp code for valid emails
-      errors.push({ msg: "Please enter a valid email address." });
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    errors.push("Please enter a valid email address.");
   }
   if (!password || password.length < 6) {
-      errors.push({ msg: "Password must be at least 6 characters long." });
+    errors.push("Password must be at least 6 characters long.");
   }
   if (!first_name) {
-      errors.push({ msg: "First name is required." });
+    errors.push("First name is required.");
   }
   if (!last_name) {
-      errors.push({ msg: "Last name is required." });
+    errors.push("Last name is required.");
   }
+
   if (errors.length > 0) {
-      return res.status(400).json({ errors });
+    // Render the register page again with the error messages
+    return res.render('pages/register', {
+      errors: errors,
+      username, email, first_name, last_name, date_of_birth // Preserve user input
+    });
   }
 
-  try{
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-      await db.none(
-          'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
-          [username, hashedPassword, email, first_name, last_name, date_of_birth] //don't we also want username from db? 
-      );
-
-      res.redirect('/login');
-  } 
-  catch (error){
-      console.error('Error during registration:', error);
-      if (req.session) {
-          req.session.message = 'Could not register, try again';
-      }
-      res.redirect('/register');
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.none(
+      'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
+      [username, hashedPassword, email, first_name, last_name, date_of_birth]
+    );
+    res.redirect('/login');
+  } catch (error) {
+    console.error('Error during registration:', error);
+    if (error.code === '23505') {
+      errors.push("Username or email already exists.");
+    } else {
+      errors.push('Unexpected error during registration, please try again.');
+    }
+    res.render('pages/register', { errors, username, email, first_name, last_name, date_of_birth });
   }
 });
+
 
 app.get('/events', (req, res) => {
   if (!req.session.user) {
@@ -637,6 +643,19 @@ app.get('/search_api', async (req, res) => {
         message: 'Error finding location'
       });
     }
+});
+app.get('/logout', (req, res) => {
+  if (req.session) {
+      req.session.destroy(err => {
+          if (err) {
+              console.error('Failed to destroy the session during logout.', err);
+          }
+          res.clearCookie('connect.sid'); // This is the default session cookie name used by express-session middleware
+          res.redirect('/login');
+      });
+  } else {
+      res.redirect('/login'); // Redirect directly if no session exists
+  }
 });
 
 module.exports = app.listen(3000);
