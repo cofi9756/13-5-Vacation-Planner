@@ -519,8 +519,16 @@ const auth = (req,res,next) => {
 app.use(auth);
 
 app.get('/select_event_type', (req, res) => {
+  const { date } = req.query; // Retrieve date from query parameters
+  if (!req.session.user || !req.session.tripInfo) {
+    return res.redirect('/login'); // Redirect if no session or trip info
+  }
+
+  // Assuming session_tripInfo is part of session object
+  // Render 'search_api' page with destination and potentially the date
   res.render('pages/search_api', {
-    destination: session_tripInfo.destination,
+    destination: req.session.tripInfo.destination,
+    date: date // Pass the selected date to the page
   });
 });
 
@@ -626,4 +634,23 @@ app.get('/calendar', (req, res) => {
       tripInfo: req.session.tripInfo
   });
 });
+app.post('/add_event_to_itinerary', (req, res) => {
+  if (!req.session.user || !req.session.tripInfo) {
+      return res.redirect('/login');
+  }
+
+  const eventDetails = req.body; // Make sure body-parser is used
+
+  // Assuming you store itinerary in the session
+  if (!req.session.itinerary) {
+      req.session.itinerary = [];
+  }
+  req.session.itinerary.push(eventDetails);
+
+  res.render('pages/calendar', {
+    eventDetails,
+    tripInfo: req.session.tripInfo,
+  });
+});
+
 module.exports = app.listen(3000);

@@ -47,6 +47,7 @@
   <h3>Suggested events for you to attend in {{destination}}:</h3>
   {{#each events}}
     <div class="card mb-3">
+      
       <div class="row g-0">
         <div class="col-md-4">
           <img src="{{this.image}}" class="img-fluid rounded-start" alt="{{this.name}}">
@@ -59,7 +60,14 @@
             <p class="card-text">{{this.description}}</p>
             <p class="card-text">Price Range: ${{this.minPrice}} - ${{this.maxPrice}}</p>
             <a href="{{this.url}}" class="btn btn-primary">Book Now</a>
-            <button class="btn btn-secondary">Add Event to Itinerary</button>
+            <form action="/add_event_to_itinerary" method="post">
+              <input type="hidden" name="name" value="{{this.name}}">
+              <input type="hidden" name="start" value="{{this.start}}">
+              <input type="hidden" name="end" value="{{this.end}}">
+              <input type="hidden" name="description" value="{{this.description}}">
+              <input type="hidden" name="url" value="{{this.url}}">
+              <button type="submit" class="btn btn-secondary">Add Event to Itinerary</button>
+            </form>
           </div>
         </div>
       </div>
