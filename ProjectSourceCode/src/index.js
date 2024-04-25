@@ -502,7 +502,7 @@ app.post('/trip', (req, res) => {
           });
   } else {
       // Handle the request to plan a trip with a known destination
-      res.redirect('/calendar');
+      // res.redirect('/calendar');
       return res.render('pages/search_api', {
         destination: session_tripInfo.destination,
       });
@@ -528,7 +528,7 @@ app.get('/search_events', async (req, res) => {
   const categories = [];
   if (req.query.music) categories.push('music');
   if (req.query.sports) categories.push('sports');
-  if (req.query.arts_theater) categories.push('arts & theater');
+  if (req.query.arts_theater) categories.push('arts');
   if (req.query.family) categories.push('family');
   if (req.query.miscellaneous) categories.push('miscellaneous');
 
@@ -545,10 +545,10 @@ app.get('/search_events', async (req, res) => {
   const startDate = new Date(session_tripInfo.startDate).toISOString().replace(/\.\d{3}/, '');
   const endDate = new Date(session_tripInfo.endDate).toISOString().replace(/\.\d{3}/, '');
 
-  console.log(categories);
-  console.log(startDate);
-  console.log(endDate);
-  console.log(destination);
+  console.log('Categories', categories);
+  // console.log(startDate);
+  // console.log(endDate);
+  // console.log(destination);
 
   try {
     const response = await axios({
@@ -563,24 +563,36 @@ app.get('/search_events', async (req, res) => {
         endDateTime: endDate,
         city: destination,  // Try as a string if the array format causes issues
         classificationName: categoryString,
+        size: 30,
       }
     });
 
-    if(response.data._embedded && response.data._embedded.events.length === 0) {
+    if(!response.data._embedded || !response.data._embedded.events || response.data._embedded.events.length === 0) {
       return res.render('pages/home', { 
         user: req.session.user, 
         message: 'No events found',
       });
     }
+    else{
+      console.log('returned events successfully');
+    }
 
     const events = response.data._embedded.events.map(event => ({
       name: event.name,
-      date: event.dates.start.dateTime,
-      image: event.images[0].url,
-      url: event.url
+      start: event.dates && event.dates.start ? event.dates.start.dateTime : 'Start date not available',
+      end: event.dates && event.dates.end ? event.dates.end.dateTime : 'End date not available',
+      image: event.images && event.images.length > 0 ? event.images[0].url : 'Default image URL here',
+      url: event.url,
+      description: event.description || 'No description available.',
+      minPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].min : 'Not available',
+      maxPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].max : 'Not available',
+      category: event.classifications && event.classifications.length > 0 && event.classifications[0].genre ? event.classifications[0].genre.name : 'No category',
+      place: event.place && event.place.name ? event.place.name : 'No place available',
     }));
 
-    res.render('pages/events_api', {events});
+    res.render('pages/events_api', {
+      events, destination: session_tripInfo.destination,
+    });
   }
   catch (error) {
     console.error('API Error:', error.response ? error.response.data : error.message);
