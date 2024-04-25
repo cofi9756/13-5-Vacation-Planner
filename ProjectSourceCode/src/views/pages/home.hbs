@@ -247,14 +247,7 @@
 
 
     // Event to clear the datalist when a selection is confirmed
-    destinationInput.addEventListener('change', function() {
-        // Ensure the value in the input matches one of the options
-        const currentInput = destinationInput.value;
-        const matchesOption = Array.from(dataList.options).some(option => option.value === currentInput);
-        if (matchesOption) {
-            dataList.innerHTML = ''; // Clear the datalist to prevent re-showing
-        }
-    });
+
 
     destinationInput.addEventListener('blur', function() {
         dataList.innerHTML = ''; // Clear the datalist when input loses focus
