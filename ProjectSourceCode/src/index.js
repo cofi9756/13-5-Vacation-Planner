@@ -9,6 +9,7 @@ const Handlebars = require('handlebars');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const axios = require('axios');
+const { use } = require('bcrypt/promises');
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
@@ -142,7 +143,7 @@ app.post('/login', async (req, res) => {
     if (req.session) {
         req.session.message = 'Username and password are required.';
     }
-    return res.render('pages/login', {message: 'Please enter a valid username and password'});
+    return res.render('pages/login', {message: 'Please enter a valid username and password', alertType: 'danger'});
   }
 
   try {
@@ -163,14 +164,14 @@ app.post('/login', async (req, res) => {
       if (req.session) {
           req.session.message = 'Invalid username or password.';
       }
-      return res.render('pages/login', {message: 'Invalid username or password'});
+      return res.render('pages/login', {message: 'Invalid username or password', alertType: 'danger'});
     }
   } catch (error) {
     console.error('Error during login:', error);
     if (req.session) {
         req.session.message = 'An error occurred, please try again.';
     }
-    return res.render('pages/login', {message: 'An error occurred while logging in, please try again'});
+    return res.render('pages/login', {message: 'An error occurred while logging in, please try again', alertType: 'danger'});
   }
 });
 
@@ -214,7 +215,7 @@ app.post('/register', async (req, res) => {
       'INSERT INTO users (username, password, email, first_name, last_name, date_of_birth) VALUES ($1, $2, $3, $4, $5, $6)',
       [username, hashedPassword, email, first_name, last_name, date_of_birth]
     );
-    res.render('pages/login', {message: 'Thank you for creating an account with us. Log in to begin planning your next trip!'});
+    res.render('pages/login', {message: 'Thank you for creating an account with us. Log in to begin planning your next trip!', alertType: 'info'});
   } catch (error) {
     console.error('Error during registration:', error);
     if (error.code === '23505') {
@@ -493,7 +494,7 @@ app.post('/trip', (req, res) => {
             if (results.length > 0) {
                 res.render('pages/recommend', { locations: results });
             } else {
-                res.render('pages/recommend', { locations: [], message: "No matching locations found." });
+                res.render('pages/recommend', { locations: [], message: 'No matching locations found.', alertType: 'warning'});
             }
         })
           .catch(error => {
@@ -502,7 +503,7 @@ app.post('/trip', (req, res) => {
           });
   } else {
       // Handle the request to plan a trip with a known destination
-      // res.redirect('/calendar');
+      res.redirect('/calendar');
       return res.render('pages/search_api', {
         destination: session_tripInfo.destination,
       });
@@ -519,12 +520,28 @@ const auth = (req,res,next) => {
 app.use(auth);
 
 app.get('/select_event_type', (req, res) => {
+  
+  if(!req.session.user) {
+    return res.render('/login', {message: 'Login to begin planning your trip', alertType: 'info'});
+  }
+  else if (!session_tripInfo.destination || !session_tripInfo.startDate || !session_tripInfo.endDate) {
+    return res.render('/home',{user: req.session.user, message: 'Input trip information to see events', alertType: 'info'});
+  }
+  
   res.render('pages/search_api', {
     destination: session_tripInfo.destination,
   });
 });
 
 app.get('/search_events', async (req, res) => {
+  
+  if(!req.session.user) {
+    return res.render('/login', {message: 'Login to begin planning your trip', alertType: 'info'});
+  }
+  else if (!session_tripInfo.destination || !session_tripInfo.startDate || !session_tripInfo.endDate) {
+    return res.render('/home',{user: req.session.user, message: 'Input trip information to see events', alertType: 'info'});
+  }
+
   const categories = [];
   if (req.query.music) categories.push('music');
   if (req.query.sports) categories.push('sports');
@@ -537,7 +554,8 @@ app.get('/search_events', async (req, res) => {
   if(categories.length === 0) {
     return res.render('pages/search_api', {
       destination: session_tripInfo.destination, 
-      message: 'Please select at least one event type'
+      message: 'Please select at least one event type',
+      alertType: 'warning'
     });
   }
 
@@ -571,6 +589,7 @@ app.get('/search_events', async (req, res) => {
       return res.render('pages/home', { 
         user: req.session.user, 
         message: 'No events found',
+        alertType: 'warning'
       });
     }
     else{
@@ -579,15 +598,15 @@ app.get('/search_events', async (req, res) => {
 
     const events = response.data._embedded.events.map(event => ({
       name: event.name,
-      start: event.dates && event.dates.start ? event.dates.start.dateTime : 'Start date not available',
-      end: event.dates && event.dates.end ? event.dates.end.dateTime : 'End date not available',
-      image: event.images && event.images.length > 0 ? event.images[0].url : 'Default image URL here',
+      start: event.dates && event.dates.start ? event.dates.start.dateTime : 'none',
+      end: event.dates && event.dates.end ? event.dates.end.dateTime : 'none',
+      image: event.images && event.images.length > 0 ? event.images[0].url : 'none',
       url: event.url,
-      description: event.description || 'No description available.',
-      minPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].min : 'Not available',
-      maxPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].max : 'Not available',
-      category: event.classifications && event.classifications.length > 0 && event.classifications[0].genre ? event.classifications[0].genre.name : 'No category',
-      place: event.place && event.place.name ? event.place.name : 'No place available',
+      description: event.description || 'none',
+      minPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].min : 'none',
+      maxPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].max : 'none',
+      category: event.classifications && event.classifications.length > 0 && event.classifications[0].genre ? event.classifications[0].genre.name : 'none',
+      place: event.place && event.place.name ? event.place.name : 'none',
     }));
 
     res.render('pages/events_api', {
@@ -599,6 +618,7 @@ app.get('/search_events', async (req, res) => {
     res.render('pages/events_api', {
       events: [],
       message: 'Error finding events',
+      alertType: 'warning'
     });
   }
 });
@@ -610,12 +630,14 @@ app.get('/logout', (req, res) => {
               console.error('Failed to destroy the session during logout.', err);
           }
           res.clearCookie('connect.sid'); // This is the default session cookie name used by express-session middleware
-          res.render('pages/login', {message: 'Logout successful!'});
+          res.render('pages/login', {message: 'Logout successful!', alertType: 'success'});
       });
   } else {
       res.redirect('/login'); // Redirect directly if no session exists
   }
 });
+
+
 app.get('/calendar', (req, res) => {
   if (!req.session.user || !req.session.tripInfo) {
       return res.redirect('/login'); // Redirect if no session or trip info
