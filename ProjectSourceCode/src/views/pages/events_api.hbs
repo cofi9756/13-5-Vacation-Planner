@@ -1,53 +1,8 @@
 {{!-- {{> message}}
-<body>
-  <div class="container mt-5">
-    <h2>Discover Events</h2>
-    <div class="row">
-      {{#each events as |event|}}
-      <div class="col-md-4 mb-4">
-        <div class="card h-100">
-          <img src="{{event.image}}" class="card-img-top" alt="{{event.name}}">
-          <div class="card-body">
-            <h5 class="card-title">{{event.name}}</h5>
-            <p class="card-text">{{event.date}}</p>
-            <a href="{{event.url}}" class="btn btn-primary" target="_blank">Book Now</a>
-          </div>
-        </div>
-      </div>
-      {{else}}
-        <p>No events found.</p>
-      {{/each}}
-    </div>
-  </div>
-</body>
-
-
-<body>
-  <div class="container mt-5">
-    <h4>Events for you in {{destination}}:</h4>
-    {{#each events |event|}}
-    <div class="row">
-      <div class="card" id="eventCard">
-        <div class="col-md-4">
-          <img src="{{event.image}}" class="img-fluid rounded-start" alt="{{event.name}}">
-        </div>
-        <div class="col-md-8">
-          <div class="card-body">
-            <h5 class="card-title">{{event.name}}</h5>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-</body> --}}
-
-{{> message}}
 <div class="container mt-4">
   <h3>Suggested events for you to attend in {{destination}}:</h3>
   {{#each events}}
     <div class="card mb-3">
-      
       <div class="row g-0">
         <div class="col-md-4">
           <img src="{{this.image}}" class="img-fluid rounded-start" alt="{{this.name}}">
@@ -60,17 +15,55 @@
             <p class="card-text">{{this.description}}</p>
             <p class="card-text">Price Range: ${{this.minPrice}} - ${{this.maxPrice}}</p>
             <a href="{{this.url}}" class="btn btn-primary">Book Now</a>
-            <form action="/add_event_to_itinerary" method="post">
-              <input type="hidden" name="name" value="{{this.name}}">
-              <input type="hidden" name="start" value="{{this.start}}">
-              <input type="hidden" name="end" value="{{this.end}}">
-              <input type="hidden" name="description" value="{{this.description}}">
-              <input type="hidden" name="url" value="{{this.url}}">
-              <button type="submit" class="btn btn-secondary">Add Event to Itinerary</button>
-            </form>
+            <button class="btn btn-secondary">Add Event to Itinerary</button>
           </div>
         </div>
       </div>
     </div>
+  {{/each}}
+</div> --}}
+
+{{> message}}
+<div class="container mt-4">
+  <h3>Suggested events for you to attend in {{destination}}:</h3>
+  {{#each events}}
+    <form method="POST" action="/add_event_to_itinerary">
+      <div class="card mb-3">
+        <div class="row g-0">
+          <div class="col-md-4">
+            <img src="{{this.image}}" class="img-fluid rounded-start" alt="{{this.name}}">
+          </div>
+          <div class="col-md-8">
+            <div class="card-body">
+              <h5 class="card-title">{{this.name}}</h5>
+              <h6 class="card-subtitle mb-2 text-muted">
+                {{#if this.category}}{{this.category}}
+                {{#if this.place}} at {{this.place}}{{/if}}
+                {{#if}}
+              </h6>
+              {{#if this.start}}
+                <p class="card-text"><small>Starts at {{this.start}}</small></p>
+              {{/if}}
+              {{#if this.end}}
+                <p class="card-text"><small>Ends at {{this.end}}</small></p>
+              {{/if}}
+              {{#if this.description}}
+                <p class="card-text">{{this.description}}</p>
+              {{/if}}
+              {{#if this.minPrice}}
+                {{#if this.maxPrice}}
+                  <p class="card-text">Price Range: ${{this.minPrice}} - ${{this.maxPrice}}</p>
+                {{/if}}
+              {{/if}}
+              <a href="{{this.url}}" class="btn btn-primary">Book Now</a>
+
+              <input type="hidden" name="name" value="{{this.name}}">
+              
+              <button class="btn btn-secondary" type="submit">Add Event to Itinerary</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
   {{/each}}
 </div>
