@@ -529,7 +529,8 @@ app.get('/select_event_type', (req, res) => {
   }
   
   res.render('pages/search_api', {
-    destination: session_tripInfo.destination,
+    destination: req.session.tripInfo.destination,
+    date: date // Pass the selected date to the page
   });
 });
 
@@ -648,4 +649,26 @@ app.get('/calendar', (req, res) => {
       tripInfo: req.session.tripInfo
   });
 });
+
+
+
+app.post('/add_event_to_itinerary', (req, res) => {
+  if (!req.session.user || !req.session.tripInfo) {
+      return res.redirect('/login');
+  }
+
+  const name = req.query.name; // Make sure body-parser is used
+
+  // Assuming you store itinerary in the session
+  if (!req.session.itinerary) {
+      req.session.itinerary = [];
+  }
+  req.session.itinerary.push(eventDetails);
+
+  res.render('pages/calendar', {
+    eventName: name,
+    tripInfo: req.session.tripInfo,
+  });
+});
+
 module.exports = app.listen(3000);

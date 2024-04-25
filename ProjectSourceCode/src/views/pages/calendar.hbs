@@ -111,36 +111,42 @@
 
 
     function createBootstrapCard(date) {
-  // Create card element using Bootstrap classes
     let card = document.createElement('div');
     card.className = 'col card my-2';
     card.id = `card-${date.toISOString().split('T')[0]}`;
-  card.className = 'col card my-2';
 
-  let dayOfWeekString = date.toLocaleDateString(undefined, { weekday: 'long' });
-  let dateString = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    let dayOfWeekString = date.toLocaleDateString(undefined, { weekday: 'long' });
+    let dateString = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
-  let title = document.createElement('div');
-  title.className = 'card-title';
-  title.innerHTML = `<strong>${dayOfWeekString}</strong><br>${dateString}`;
-  card.appendChild(title);
+    let title = document.createElement('div');
+    title.className = 'card-title';
+    title.innerHTML = `<strong>${dayOfWeekString}</strong><br>${dateString}`;
+    card.appendChild(title);
 
-  // Create an icon or button to add events
-  let icon = document.createElement('button');
-  icon.className = 'btn btn-primary btn-sm';
-  icon.textContent = 'Add Event';
-  icon.onclick = function() {
-    // Logic to open the modal to add an event
-    openEventModal(date); // Pass the date in YYYY-MM-DD format
-  };
-  card.appendChild(icon);
+    // Existing button to add trip info
+    let addInfoButton = document.createElement('button');
+    addInfoButton.className = 'btn btn-primary btn-sm';
+    addInfoButton.textContent = 'Add Trip Info';
+    addInfoButton.onclick = function() {
+        openEventModal(date);
+    };
+    card.appendChild(addInfoButton);
 
-  // Create an event container div and add it to the card
-  let eventsDiv = createEventDiv();
-  card.appendChild(eventsDiv);
+    // New button to redirect to select event type
+    let addEventButton = document.createElement('button');
+    addEventButton.className = 'btn btn-secondary btn-sm';
+    addEventButton.textContent = 'Add Events';
+    addEventButton.style.marginLeft = '10px'; // Add some space between buttons
+    addEventButton.onclick = function() {
+        window.location.href = `/select_event_type?date=${encodeURIComponent(date.toISOString())}`;
+    };
+    card.appendChild(addEventButton);
 
-  return card;
-    }
+    let eventsDiv = createEventDiv();
+    card.appendChild(eventsDiv);
+
+    return card;
+}
 
     function createEventDiv() {
     // Create events div
@@ -206,7 +212,7 @@
     const events = JSON.parse(localStorage.getItem('events')) || {};
     const currentEvent = events[dateStr] ? events[dateStr][eventIndex] : null;
 
-    document.getElementById("eventModalLabel").textContent = currentEvent ? `Edit Event on ${date.toLocaleDateString()}` : `Add Event on ${date.toLocaleDateString()}`;
+    document.getElementById("eventModalLabel").textContent = currentEvent ? `Edit Info on ${date.toLocaleDateString()}` : `Add Info on ${date.toLocaleDateString()}`;
     eventNameInput.value = currentEvent ? currentEvent.name : '';
     eventDescriptionInput.value = currentEvent ? currentEvent.description : '';
 
@@ -263,7 +269,7 @@
     dayEvents.forEach((event, index) => {
         let eventInfo = document.createElement("div");
         eventInfo.className = "saved-event";
-        eventInfo.textContent = `${event.name}: ${event.description}`;
+        eventInfo.innerHTML = `<strong>${event.name}:</strong> ${event.description}`; // Event name in bold
         eventInfo.style.border = "1px solid black"; // Outline for visibility
         eventInfo.onclick = () => openEventModal(date, index); // Pass index for editing
         card.appendChild(eventInfo);
