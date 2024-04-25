@@ -31,26 +31,29 @@
       <div class="card mb-3">
         <div class="row g-0">
           <div class="col-md-4">
-            {{#unless this.image === 'none'}}
-              <img src="{{this.image}}" class="img-fluid rounded-start" alt="{{this.name}}">
-            {{/unless}}
+            <img src="{{this.image}}" class="img-fluid rounded-start" alt="{{this.name}}">
           </div>
           <div class="col-md-8">
             <div class="card-body">
               <h5 class="card-title">{{this.name}}</h5>
               <h6 class="card-subtitle mb-2 text-muted">
-                {{#unless this.category === 'none'}}{{this.category}} at {{/unless}}
-                {{#unless this.place === 'none'}}{{this.place}}{{/unless}}
+                {{#if this.category}}{{this.category}} at {{/if}}
+                {{#if this.place}}{{this.place}}{{/if}}
               </h6>
-              {{#unless this.start === 'none' || this.end === 'none'}}
-                <p class="card-text"><small>{{this.start}} to {{this.end}}</small></p>
-              {{/unless}}
-              {{#unless this.description === 'none'}}
+              {{#if this.start}}
+                <p class="card-text"><small>Starts at {{this.start}}</small></p>
+              {{/if}}
+              {{#if this.end}}
+                <p class="card-text"><small>Ends at {{this.end}}</small></p>
+              {{/if}}
+              {{#if this.description}}
                 <p class="card-text">{{this.description}}</p>
-              {{/unless}}
-              {{#unless this.minPrice === 'none' || this.maxPrice === 'none'}}
-                <p class="card-text">Price Range: ${{this.minPrice}} - ${{this.maxPrice}}</p>
-              {{/unless}}
+              {{/if}}
+              {{#if this.minPrice}}
+                {{#if this.maxPrice}}
+                  <p class="card-text">Price Range: ${{this.minPrice}} - ${{this.maxPrice}}</p>
+                {{/if}}
+              {{/if}}
               <a href="{{this.url}}" class="btn btn-primary">Book Now</a>
 
               <input type="hidden" name="name" value="{{this.name}}">

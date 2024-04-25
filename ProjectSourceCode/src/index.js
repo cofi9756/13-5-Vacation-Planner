@@ -598,15 +598,15 @@ app.get('/search_events', async (req, res) => {
 
     const events = response.data._embedded.events.map(event => ({
       name: event.name,
-      start: event.dates && event.dates.start ? event.dates.start.dateTime : 'none',
-      end: event.dates && event.dates.end ? event.dates.end.dateTime : 'none',
-      image: event.images && event.images.length > 0 ? event.images[0].url : 'none',
+      start: event.dates && event.dates.start ? event.dates.start.dateTime : '',
+      end: event.dates && event.dates.end ? event.dates.end.dateTime : '',
+      image: event.images && event.images.length > 0 ? event.images[0].url : '',
       url: event.url,
-      description: event.description || 'none',
-      minPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].min : 'none',
-      maxPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].max : 'none',
-      category: event.classifications && event.classifications.length > 0 && event.classifications[0].genre ? event.classifications[0].genre.name : 'none',
-      place: event.place && event.place.name ? event.place.name : 'none',
+      description: event.description || '',
+      minPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].min : '',
+      maxPrice: event.priceRanges && event.priceRanges.length > 0 ? event.priceRanges[0].max : '',
+      category: event.classifications && event.classifications.length > 0 && event.classifications[0].genre ? event.classifications[0].genre.name : '',
+      place: event.place && event.place.name ? event.place.name : '',
     }));
 
     res.render('pages/events_api', {
