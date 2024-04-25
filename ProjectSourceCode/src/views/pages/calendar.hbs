@@ -3,7 +3,6 @@
 
 <head>
     <title>Calendar</title>
-
     <!-- Bootstrap CSS library -->
     <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -42,12 +41,12 @@
         #calendar {
             height: 100vh;
         }
-
-        .fixed-bottom-right {
-        position: fixed; /* Fixed position */
-        right: 15px;    /* 15px from the right */
-        bottom: 15px;   /* 15px from the bottom */
-    }
+        .saved-event {
+            margin-top: 5px;
+            padding: 5px;
+            border: 1px solid #ccc; /* Light grey border */
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -77,67 +76,24 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="modal-body">
-                        <form id="eventForm">
-                          <!-- Event Name -->
-                          <div class="mb-3">
+                    <form id="eventForm">
+                        <!-- Event Name -->
+                        <div class="mb-3">
                             <label for="event_name" class="form-label">Event Name</label>
                             <input type="text" class="form-control" id="event_name" required>
-                          </div>
-                
-                          <!-- Weekday Dropdown -->
-                          <div class="mb-3">
-                            <label for="event_weekday" class="form-label">Weekday</label>
-                            <select class="form-select" id="event_weekday" required>
-                              <option value="">Select a day</option>
-                              <option value="Sunday">Sunday</option>
-                              <option value="Monday">Monday</option>
-                              <option value="Tuesday">Tuesday</option>
-                              <option value="Wednesday">Wednesday</option>
-                              <option value="Thursday">Thursday</option>
-                              <option value="Friday">Friday</option>
-                              <option value="Saturday">Saturday</option>
-                            </select>
-                          </div>
-                
-                          <!-- Time Picker -->
-                          <div class="mb-3">
-                            <label for="event_time" class="form-label">Time</label>
-                            <input type="time" class="form-control" id="event_time" required>
-                          </div>
-                
-                          <!-- Event Modality Dropdown -->
-                          <div class="mb-3">
-                            <label for="event_modality" class="form-label">Event Modality</label>
-                            <select class="form-select" id="event_modality" required onchange="updateLocationOptions(this.value)">
-                              <option value="in-person" default>In-Person</option>
-                              <option value="remote">Remote</option>
-                            </select>
-                          </div>
-                
-                          <!-- Location - Conditional Field -->
-                          <div class="mb-3" id="event_location_div" style="display:none;">
-                            <label for="event_location" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="event_location">
-                          </div>
-                
-                          <!-- Remote URL - Conditional Field -->
-                          <div class="mb-3" id="event_remote_url_div" style="display:none;">
-                            <label for="event_remote_url" class="form-label">Remote URL</label>
-                            <input type="url" class="form-control" id="event_remote_url" placeholder="https://example.com" pattern="https?://.+">
-                          </div>
-                
-                          <!-- Attendees -->
-                          <div class="mb-3">
-                            <label for="event_attendees" class="form-label">Attendees</label>
-                            <input type="text" class="form-control" id="event_attendees" placeholder="Enter names separated by commas">
-                          </div>
-                
-                          <!-- Submit Buttons -->
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                          <button id="submit_button" class="btn btn-primary" type="submit">Create Event</button>
-                        </form>
-                    </div>
+                        </div>
+
+                        <!-- Event Description -->
+                        <div class="mb-3">
+                            <label for="event_description" class="form-label">Description</label>
+                            <textarea class="form-control" id="event_description" rows="3"></textarea>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Event</button>
+                        <button type="button" class="btn btn-danger" id="deleteEvent">Delete Event</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -148,138 +104,18 @@
 
             
     <script type="text/javascript">
-        const CALENDAR_EVENTS = [
-        {
-        name: "Running",
-        day: "wednesday",
-        time: "09:00",
-        modality: "In-person",
-        location: "Boulder",
-        url: "",
-        attendees: "Alice, Jack, Ben",
-        },
-        {
-        name: "Class",
-        day: "thursday",
-        time: "08:00",
-        modality: "In-person",
-        location: "Boulder",
-        url: "",
-        attendees: "Thomas, Adrian",
-        },
-    ];
 
-    let EVENT_MODAL;
-            // Correctly initialize the totalDays based on tripInfo
+        // Correctly initialize the totalDays based on tripInfo
         const startDate = new Date('{{tripInfo.startDate}}');
         const endDate = new Date('{{tripInfo.endDate}}');
-    let currentStartIndex = 0; // Global variable to keep track of the current page
-    const prevButton = document.getElementById('prevButton');
-    const nextButton = document.getElementById('nextButton');
-    /* ********************** PART B: 6.2: CREATE MODAL ************************************** */
-    
-    function initializeEventModal() {
-        // @TODO: Create a modal using JS. The id will be `event-modal`:
-        // Reference: https://getbootstrap.com/docs/5.3/components/modal/#via-javascript
-        EVENT_MODAL = new bootstrap.Modal(document.getElementById('event-modal'));
-    }
-    
-    function updateEventFromModal(id) {
-        if (id === undefined) {
-        id = CALENDAR_EVENTS.length;
-        }
+        let currentStartIndex = 0; // Global variable to keep track of the current page
 
-        CALENDAR_EVENTS[id] = {
-        name: document.querySelector('#event_name').value,
-        time: document.querySelector('#event_time').value,
-        modality: document.querySelector('#event_modality').value,
-        location: document.querySelector('#event_modality').value === 'in-person' ? document.querySelector('#event_location').value : '',
-        url: document.querySelector('#event_modality').value === 'Remote' ? document.querySelector('#event_remote_url').value : '',
-        attendees: document.querySelector('#event_attendees').value
-        };
-    
-        updateDOM();
-        EVENT_MODAL.hide();
-    }
-
-    function openEventModal(date) {
-        const submit_button = document.querySelector("#submit_button");
-        const modal_title = document.querySelector(".modal-title");
-
-        if (!event) {
-        event = {
-            name: "",
-            time: "",
-            modality: "",
-            location: "",
-            url: "",
-            attendees: "",
-        };
-        modal_title.innerHTML = "Create Event"; 
-        submit_button.innerHTML = "Create Event"; 
-        } else {
-        modal_title.innerHTML = "Update Event";
-        submit_button.innerHTML = "Update Event";
-        }
-        
-        document.querySelector("#event_name").value = event.name;
-        document.querySelector("#event_time").value = event.time;
-        document.querySelector("#event_modality").value = event.modality;
-        document.querySelector("#event_location").value = event.location;
-        document.querySelector("#event_remote_url").value = event.url;
-        document.querySelector("#event_attendees").value = event.attendees;
-    
-        updateLocationOptions(event.modality);
-        
-        const form = document.querySelector("#event-modal form");
-
-        EVENT_MODAL.show();
-    }
-    function updateLocationOptions(modality_value) {
-        var location = document.getElementById('event_location_div');
-        var remoteUrl = document.getElementById('event_remote_url_div');
-        if (modality_value == 'in-person') {
-        location.style.display = 'block';
-        remoteUrl.style.display = 'none';
-        } 
-        else 
-        {
-        location.style.display = 'none';
-        remoteUrl.style.display = 'block';
-        }
-    }
-
-    initializeEventModal();
-    const calendarElement = document.getElementById('calendar');
-
-    if (calendarElement) {
-    CALENDAR_DAYS.forEach(day => {
-        // Create a bootstrap card for each weekday
-        var card = createBootstrapCard(day);
-        calendarElement.appendChild(card); // Add card to the calendarElement
-
-        // Create title and add it to the card
-        var title = createTitle(day);
-        card.appendChild(title);
-
-        // Create event icon and add it to the title
-        var icon = createEventIcon(card); // Assuming this function returns an icon
-        title.appendChild(icon);
-
-        // Create event div and add it to the card
-        var eventsDiv = createEventDiv(); // Assuming this function returns an events div
-        card.appendChild(eventsDiv);
-    });
-
-    // Call updateDOM() after implementing it
-    // updateDOM()
-    } else {
-    console.error('Calendar element not found');
-    }
 
     function createBootstrapCard(date) {
   // Create card element using Bootstrap classes
-  let card = document.createElement('div');
+    let card = document.createElement('div');
+    card.className = 'col card my-2';
+    card.id = `card-${date.toISOString().split('T')[0]}`;
   card.className = 'col card my-2';
 
   let dayOfWeekString = date.toLocaleDateString(undefined, { weekday: 'long' });
@@ -305,26 +141,6 @@
   card.appendChild(eventsDiv);
 
   return card;
-    }
-
-    function createTitle(day) {
-    // Create title element
-    const title = document.createElement('h5');
-    title.className = 'h6 text-center position-relative py-2';
-    title.innerHTML = day;
-
-    return title;
-    }
-
-    function createEventIcon(card) {
-    // Create icon element. This is just a placeholder example.
-    let icon = document.createElement('i');
-    icon.className =
-    'bi bi-calendar-plus btn position-absolute translate-middle start-100  rounded p-0 btn-link';
-    // adding an event listener to the click event of the icon to open the modal
-    icon.setAttribute('onclick', `openEventModal({day: ${card.id}})`);
-
-    return icon;
     }
 
     function createEventDiv() {
@@ -357,10 +173,11 @@
 
             // Check if the adjusted date is within the trip range
             if (adjustedDate <= new Date(endDate)) {
-                var card = createBootstrapCard(adjustedDate); // Create a card for the day
-                calendarElement.appendChild(card); // Add card to the calendarElement
+                const card = createBootstrapCard(adjustedDate);
+                calendarElement.appendChild(card);
+                updateEventDisplay(adjustedDate); // Load events for this date
             }
-    }
+        }
 
     // Show or hide the "Previous" button
     prevButton.style.display = startIndex > 0 ? 'block' : 'none';
@@ -382,73 +199,83 @@
     generateWeekView(calendarElement, currentStartIndex);
 }
     
-    function createEventElement(id) {
-        var eventElement = document.createElement('div');
-        eventElement.classList = "event row border rounded m-1 py-1";
-        eventElement.setAttribute('id', `event-${id}`);
-        return eventElement;
-    }
-    
-    function createTitleForEvent(event) {
-        var title = document.createElement('div');
-        title.classList.add('col', 'event-title');
-        title.innerHTML = event.name;
-        return title;
-    }
-    
-    function updateDOM() {
-    const events = CALENDAR_EVENTS;
-    events.forEach((event, id) => {
-        // First, let's try to update the event if it already exists.
-        // @TODO: Use the `id` parameter to fetch the object if it already exists.
-        // Replace <> with the appropriate variable name
-        // In templated strings, you can include variables as ${var_name}.
-        // For eg: let name = 'John';
-        // let msg = `Welcome ${name}`;
-        let eventElement = document.querySelector(`#event-${id}`);
-        // if event is undefined, i.e. it doesn't exist in the CALENDAR_EVENTS array, make a new one.
-        if (eventElement === null) {
-        eventElement = createEventElement(id);
-        const title = createTitleForEvent(event);
-        eventElement.appendChild(title);
-        // @TODO: Append the title to the event element. Use .append() or .appendChild()
-        } else {
-        // @TODO: Remove the old element while updating the event.
-        // Use .remove() with the eventElement to remove the eventElement.
-        eventElement.remove(); // Remove the old element while updating the event.
-        eventElement = createEventElement(id);
-        const title = createTitleForEvent(event);
-        eventElement.appendChild(title);
-        }
-        // Add the event name
-        const title = eventElement.querySelector('div.event-title');
-        title.innerHTML = event.name;
-        // Add a tooltip with more information on hover
-        eventElement.setAttribute('onclick', `openEventModal({id: ${id}})`);
-        // Add the event div to the parent
-        document
-        .querySelector(`#${event.day.toLowerCase()} .event-container`)
-        .appendChild(eventElement);
-    });
-    updateTooltips();
-    }
-    
-    function updateTooltips() {
-    const events = document.querySelectorAll('.event');
-    
-    events.forEach(eventElement => {
-      const id = eventElement.getAttribute('id').replace('event-', '');
-      const event = CALENDAR_EVENTS[id];
-      const tooltipContent = `Name: ${event.name}<br>Time: ${event.time}<br>Location: ${event.modality === 'in-person' ? 'In-Person @ ' + event.location : 'Remote'}`;
+    function openEventModal(date, eventIndex = null) {
+    const eventModal = new bootstrap.Modal(document.getElementById('event-modal'));
+    const eventNameInput = document.getElementById("event_name");
+    const eventDescriptionInput = document.getElementById("event_description");
+    const dateStr = date.toISOString().split('T')[0];
+    const events = JSON.parse(localStorage.getItem('events')) || {};
+    const currentEvent = events[dateStr] ? events[dateStr][eventIndex] : null;
 
-      eventElement.setAttribute('title', tooltipContent);
-  
-      new bootstrap.Tooltip(eventElement, {
-        html: true // Allows HTML content inside the tooltip
-      });
+    document.getElementById("eventModalLabel").textContent = currentEvent ? `Edit Event on ${date.toLocaleDateString()}` : `Add Event on ${date.toLocaleDateString()}`;
+    eventNameInput.value = currentEvent ? currentEvent.name : '';
+    eventDescriptionInput.value = currentEvent ? currentEvent.description : '';
+
+    document.getElementById("eventForm").onsubmit = function(e) {
+        e.preventDefault();
+        const updatedName = eventNameInput.value;
+        const updatedDescription = eventDescriptionInput.value;
+
+        if (currentEvent) {
+            events[dateStr][eventIndex] = { name: updatedName, description: updatedDescription };
+        } else {
+            events[dateStr] = events[dateStr] || [];
+            events[dateStr].push({ name: updatedName, description: updatedDescription });
+        }
+
+        localStorage.setItem('events', JSON.stringify(events));
+        updateEventDisplay(date);
+        eventModal.hide();
+    };
+
+    document.getElementById("deleteEvent").addEventListener('click', function() {
+        if (eventIndex !== null) {
+            events[dateStr].splice(eventIndex, 1);
+            if (events[dateStr].length === 0) delete events[dateStr];  // Remove the key if no events left
+            localStorage.setItem('events', JSON.stringify(events));
+            updateEventDisplay(date);
+            eventModal.hide();
+        }
     });
-  }
-    
+
+    eventModal.show();
+}
+
+    function saveEvent(date, name, description) {
+    let events = JSON.parse(localStorage.getItem('events')) || {};
+    const dateKey = date.toISOString().split('T')[0];
+    // Ensure there is always an array to push to
+    if (!Array.isArray(events[dateKey])) {
+        events[dateKey] = [];
+    }
+    events[dateKey].push({ name, description });
+    localStorage.setItem('events', JSON.stringify(events));
+    updateEventDisplay(date);
+}
+
+    function updateEventDisplay(date) {
+    const dateStr = date.toISOString().split('T')[0];
+    const events = JSON.parse(localStorage.getItem('events')) || {};
+    const dayEvents = events[dateStr] || [];
+    const card = document.querySelector(`#card-${dateStr} .event-container`);
+
+    card.innerHTML = ''; // Clear previous entries
+
+    dayEvents.forEach((event, index) => {
+        let eventInfo = document.createElement("div");
+        eventInfo.className = "saved-event";
+        eventInfo.textContent = `${event.name}: ${event.description}`;
+        eventInfo.style.border = "1px solid black"; // Outline for visibility
+        eventInfo.onclick = () => openEventModal(date, index); // Pass index for editing
+        card.appendChild(eventInfo);
+    });
+}
+
+    window.addEventListener('beforeunload', function () {
+    document.getElementById("event_name").value = '';
+    document.getElementById("event_description").value = '';
+});
+
     </script>
 </body>
 
