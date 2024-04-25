@@ -37,8 +37,9 @@
             <div class="card-body">
               <h5 class="card-title">{{this.name}}</h5>
               <h6 class="card-subtitle mb-2 text-muted">
-                {{#if this.category}}{{this.category}} at {{/if}}
-                {{#if this.place}}{{this.place}}{{/if}}
+                {{#if this.category}}{{this.category}}
+                {{#if this.place}} at {{this.place}}{{/if}}
+                {{#if}}
               </h6>
               {{#if this.start}}
                 <p class="card-text"><small>Starts at {{this.start}}</small></p>
