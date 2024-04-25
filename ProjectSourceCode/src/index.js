@@ -502,7 +502,7 @@ app.post('/trip', (req, res) => {
           });
   } else {
       // Handle the request to plan a trip with a known destination
-      // res.redirect('/calendar');
+      res.redirect('/calendar');
       return res.render('pages/search_api', {
         destination: session_tripInfo.destination,
       });

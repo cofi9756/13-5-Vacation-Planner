@@ -274,6 +274,7 @@
     window.addEventListener('beforeunload', function () {
     document.getElementById("event_name").value = '';
     document.getElementById("event_description").value = '';
+    localStorage.removeItem('events');
 });
 
     </script>
