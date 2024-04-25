@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,3 +36,32 @@
     </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recommended Destinations</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body style="font-family: 'Arial', sans-serif; color: #333; padding: 20px; background-color: #f8f8f8; text-align: center;">
+    {{#if locations.length}}
+        <h1>Recommended Destinations Based on Your Preferences</h1>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+            {{#each locations}}
+            <div style="background-color: #fff; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 8px; width: 300px;">
+                <img src="{{image_url}}" alt="Image of {{name}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
+                <h2>{{name}}</h2>
+                <p>{{description}}</p>
+                <p><strong>Budget Range:</strong> ${{budget_min}} - ${{budget_max}}</p>
+            </div>
+            {{/each}}
+        </div>
+    {{else}}
+        <h1>No Recommendations Found</h1>
+        <p>We could not find any destinations matching your criteria. Please try modifying your search preferences.</p>
+    {{/if}}
+    <a href="/trip" style="color: #4a90e2; text-decoration: none; font-size: 18px; margin-top: 20px; display: inline-block;">Back to Trip Planner</a>
+</body>
+</html>
+>>>>>>> c2d8e105b2e42066485eed17c13ef5a7faf35478
