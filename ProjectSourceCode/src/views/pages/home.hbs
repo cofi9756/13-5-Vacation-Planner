@@ -3,11 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>Nomad Nexus</title>
+     <style>
+        /* Set full height for the columns */
+        .full-height {
+            height: 100vh; /* 100% viewport height */
+        }
+         /* Custom muted colors */
+        .muted-blue {
+            background-color:#EAEBE0 ; /* Use a muted blue color */
+        }
+        
+        .muted-green {
+            background-color: #C8D7D6; /* Use a muted green color */
+        }
+    </style>
+    {{!-- <link rel="stylesheet" href="/13-5-Vacation-Planner/ProjectSourceCode/src/resources/css/style2.css"> --}}
 </head>
 {{> message}}
-<body style="font-family: 'Arial', sans-serif; color: #333; padding: 20px; background-color: #f8f8f8; text-align: center;">
+<body style="font-family: 'Arial', sans-serif; color: #333; padding: 20px; background-color: #C8D7D6; text-align: center;">
     {{#if user}}
-        <h1 style="color: #4a90e2;">Welcome, {{user.first_name}}!</h1>
+        <h1 style="color: #333;">Welcome, {{user.first_name}}!</h1>
         <p style="margin-bottom: 30px;">Let's plan your next trip:</p>
         <form id="tripForm" action="/trip" method="post" style="display: inline-block; text-align: left; background-color: #fff; padding: 40px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 8px;">
             <!-- Radio buttons to toggle the form -->
@@ -96,8 +111,227 @@
             <button type="submit" style="background-color: #5cb85c; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Plan Trip</button>
         </form>
     {{else}}
-        <h1>Welcome to Nomad Nexus!</h1>
-        <p>To access personalized trip planning, please <a href="/login" style="color: #4a90e2; text-decoration: none;">login</a> or <a href="/register" style="color: #4a90e2; text-decoration: none;">register</a>.</p>
+        <!-- index.hbs -->
+<div class="container muted-green">
+    <!-- First set of icons -->
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-music fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-film fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-paint-brush fa-3x"></i>
+        </div>
+    </div>
+    <!-- Second set of icons -->
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-utensils fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-theater-masks fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-cocktail fa-3x"></i>
+        </div>
+    </div>
+    <!-- Third set of icons -->
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-futbol fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-book-open fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-magic fa-3x"></i>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <!-- Fourth set of icons -->
+    <div class="row muted-green">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-plane fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-car fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-train fa-3x"></i>
+        </div>
+    </div>
+    <!-- Fifth set of icons -->
+    <div class="row muted-green">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-bicycle fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-ship fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-bus fa-3x"></i>
+        </div>
+    </div>
+    <!-- Sixth set of icons -->
+    <div class="row muted-green">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-hiking fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-camera fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-glass-cheers fa-3x"></i>
+        </div>
+    </div>
+</div>
+<div class="container muted-green">
+    <!-- First set of icons -->
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-biking fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-shopping-cart fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-swimmer fa-3x"></i>
+        </div>
+    </div>
+    <!-- Second set of icons -->
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-campground fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-camera-retro fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-coffee fa-3x"></i>
+        </div>
+    </div>
+    <!-- Third set of icons -->
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-cocktail fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-globe-americas fa-3x"></i>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-hiking fa-3x"></i>
+        </div>
+    </div>
+    <!-- Fourth set of icons -->
+<div class="row">
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-umbrella-beach fa-3x"></i>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-film fa-3x"></i>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-running fa-3x"></i>
+    </div>
+</div>
+<!-- Fifth set of icons -->
+<div class="row">
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-bowling-ball fa-3x"></i>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-umbrella-beach fa-3x"></i>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-book fa-3x"></i>
+    </div>
+</div>
+<!-- Sixth set of icons -->
+<div class="row">
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-cocktail fa-3x"></i>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-star fa-3x"></i>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <i class="fas fa-moon fa-3x"></i>
+    </div>
+</div>
+</div>
+<!-- Add this at the end of your HTML body -->
+<div class="overlay" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; max-width: 600px;">
+  <div class="content" style="background-color: white; padding: 20px; border-radius: 10px;">
+    <h1 style="text-align: center; font-size: 36px;">Welcome to the Nomad Nexus.</h1>
+    <h6>To access personalized trip planning, please <a href="/login" style="color: #4a90e2; text-decoration: none;">login</a> or <a href="/register" style="color: #4a90e2; text-decoration: none;">register</a></h6>
+  </div>
+</div>
+
+
+    {{!-- <div class="container-fluid p-0">
+        <div class="row no-gutters">
+            <!-- Left column with blue background -->
+            <div class="col-md-6 muted-green full-height"style="border: 4px solid black;">
+                <h2 class="text-center text-white">Experience the Nomad Nexus.</h2>
+                <div class="container">
+                <div class="row">
+                    <div class="col-md-4">
+                    <i class="fas fa-plane fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                    <div class="col-md-4">
+                    <i class="fas fa-train fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                    <div class="col-md-4">
+                    <i class="fas fa-bus fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                    <i class="fas fa-car fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                    <div class="col-md-4">
+                    <i class="fas fa-hotel fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                    <div class="col-md-4">
+                    <i class="fas fa-ship fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                    <i class="fas fa-ticket-alt fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                    <div class="col-md-4">
+                    <i class="fas fa-calendar-alt fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                    <div class="col-md-4">
+                    <i class="fas fa-map-marker-alt fa-5x"></i>
+                    <p class="text-center"></p>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <!-- Right column with green background -->
+            <div class="col-md-6 muted-blue full-height"style="border: 4px solid black;">
+                <h2 class="text-center text-white">Right Column</h2>
+                 <p>To access personalized trip planning, please <a href="/login" style="color: #4a90e2; text-decoration: none;">login</a> or <a href="/register" style="color: #4a90e2; text-decoration: none;">register</a>.</p>
+            </div>
+        </div>
+    </div>
+
+       --}}
+
+      
     {{/if}}
         <script type="text/javascript">
             function toggleFormFields() {
