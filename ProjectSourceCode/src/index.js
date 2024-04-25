@@ -231,24 +231,7 @@ app.get('/events', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login'); // Redirect to login if not authenticated
   }
-  // const query = 'SELECT event_name, to_char(event_date, \'DD Month YYYY\') AS event_date, to_char(event_time, \'HH24:MI\') AS event_time, event_desc, country_name, city_name, image_link, image_desc FROM events e JOIN countries c ON e.countryid = c.countryid JOIN cities ci ON c.countryid = ci.countryid JOIN images i ON e.eventid = i.eventid;';
 
-
-  // db.any(query)
-  //   .then(events => {
-  //     console.log(events);
-  //     res.render('pages/events', {
-  //       email: user.email,
-  //       events,
-  //     });
-  //   })
-  //   .catch(err => {
-  //     res.render('pages/events', {
-  //       email: user.email,
-  //       events: [],
-  //       error: true,
-  //     });
-  //   });
   const saved = req.query.saved;
   
   db.any(saved ? saved_events : all_events, [user.userid, destination, budget])
@@ -538,7 +521,7 @@ app.get('/search_events', async (req, res) => {
     return res.render('/login', {message: 'Login to begin planning your trip', alertType: 'info'});
   }
   else if (!session_tripInfo.destination || !session_tripInfo.startDate || !session_tripInfo.endDate) {
-    return res.render('/home',{user: req.session.user, message: 'Input trip information to see events', alertType: 'info'});
+    return res.render('pages/home',{user: req.session.user, message: 'Input trip information to see events', alertType: 'info'});
   }
 
   const categories = [];
@@ -664,5 +647,20 @@ app.post('/add_event_to_itinerary', (req, res) => {
     tripInfo: req.session.tripInfo,
   });
 });
+
+app.post('/add_location', (req, res) => {
+  if (!req.session.user || !req.session.tripInfo) {
+      return res.redirect('/login');
+  }
+
+  // Assuming your form sends 'destination' as part of the body
+  req.session.tripInfo.destination = req.body.destination;
+
+  res.render('pages/calendar', {
+    tripInfo: req.session.tripInfo,
+  });
+});
+
+
 
 module.exports = app.listen(3000);
