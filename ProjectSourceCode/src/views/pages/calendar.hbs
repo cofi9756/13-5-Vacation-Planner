@@ -168,17 +168,7 @@
         attendees: "Thomas, Adrian",
         },
     ];
-    
-    const CALENDAR_DAYS = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-    ];
-    
+
     let EVENT_MODAL;
             // Correctly initialize the totalDays based on tripInfo
         const startDate = new Date('{{tripInfo.startDate}}');
@@ -201,7 +191,6 @@
 
         CALENDAR_EVENTS[id] = {
         name: document.querySelector('#event_name').value,
-        day: document.querySelector('#event_weekday').value,
         time: document.querySelector('#event_time').value,
         modality: document.querySelector('#event_modality').value,
         location: document.querySelector('#event_modality').value === 'in-person' ? document.querySelector('#event_location').value : '',
@@ -213,15 +202,13 @@
         EVENT_MODAL.hide();
     }
 
-    function openEventModal({id, day}) {
+    function openEventModal(date) {
         const submit_button = document.querySelector("#submit_button");
         const modal_title = document.querySelector(".modal-title");
-        let event = CALENDAR_EVENTS[id];
 
         if (!event) {
         event = {
             name: "",
-            day: day,
             time: "",
             modality: "",
             location: "",
@@ -230,14 +217,12 @@
         };
         modal_title.innerHTML = "Create Event"; 
         submit_button.innerHTML = "Create Event"; 
-        id = CALENDAR_EVENTS.length; 
         } else {
         modal_title.innerHTML = "Update Event";
         submit_button.innerHTML = "Update Event";
         }
         
         document.querySelector("#event_name").value = event.name;
-        document.querySelector("#event_weekday").value = day; 
         document.querySelector("#event_time").value = event.time;
         document.querySelector("#event_modality").value = event.modality;
         document.querySelector("#event_location").value = event.location;
@@ -247,7 +232,6 @@
         updateLocationOptions(event.modality);
         
         const form = document.querySelector("#event-modal form");
-        form.setAttribute("action", `javascript:updateEventFromModal(${id})`);
 
         EVENT_MODAL.show();
     }
@@ -312,7 +296,7 @@
   icon.textContent = 'Add Event';
   icon.onclick = function() {
     // Logic to open the modal to add an event
-    openEventModal({date: date.toISOString().split('T')[0]}); // Pass the date in YYYY-MM-DD format
+    openEventModal(date); // Pass the date in YYYY-MM-DD format
   };
   card.appendChild(icon);
 
@@ -351,31 +335,31 @@
 
     }
 
-function generateWeekView(calendarElement, startIndex) {
-    calendarElement.innerHTML = ''; // Clear any existing elements
+    function generateWeekView(calendarElement, startIndex) {
+        calendarElement.innerHTML = ''; // Clear any existing elements
 
-    // Get the user's local timezone offset and convert it to milliseconds
-    let timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
+        // Get the user's local timezone offset and convert it to milliseconds
+        let timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
 
-    // Adjust startDate by the timezone offset
-    let adjustedStartDate = new Date(new Date(startDate).getTime() + timezoneOffset);
+        // Adjust startDate by the timezone offset
+        let adjustedStartDate = new Date(new Date(startDate).getTime() + timezoneOffset);
 
-    // Calculate the total number of days in the trip
-    const totalDays = Math.ceil((new Date(endDate) - new Date(adjustedStartDate)) / (1000 * 60 * 60 * 24)) + 1;
+        // Calculate the total number of days in the trip
+        const totalDays = Math.ceil((new Date(endDate) - new Date(adjustedStartDate)) / (1000 * 60 * 60 * 24)) + 1;
 
-    // Loop over each day within the 7-day window, adjusting each date by the timezone offset
-    for (let i = 0; i < 7; i++) {
-        let date = new Date(adjustedStartDate);
-        date.setDate(date.getDate() + startIndex + i);
+        // Loop over each day within the 7-day window, adjusting each date by the timezone offset
+        for (let i = 0; i < 7; i++) {
+            let date = new Date(adjustedStartDate);
+            date.setDate(date.getDate() + startIndex + i);
 
-        // Adjust the date by the timezone offset
-        let adjustedDate = new Date(date.getTime() + timezoneOffset);
+            // Adjust the date by the timezone offset
+            let adjustedDate = new Date(date.getTime() + timezoneOffset);
 
-        // Check if the adjusted date is within the trip range
-        if (adjustedDate <= new Date(endDate)) {
-            var card = createBootstrapCard(adjustedDate); // Create a card for the day
-            calendarElement.appendChild(card); // Add card to the calendarElement
-        }
+            // Check if the adjusted date is within the trip range
+            if (adjustedDate <= new Date(endDate)) {
+                var card = createBootstrapCard(adjustedDate); // Create a card for the day
+                calendarElement.appendChild(card); // Add card to the calendarElement
+            }
     }
 
     // Show or hide the "Previous" button
@@ -393,9 +377,7 @@ function generateWeekView(calendarElement, startIndex) {
     };
 }
 
-
-// Initialize totalDays inside initializeCalendar function to ensure it's updated
-function initializeCalendar() {
+    function initializeCalendar() {
     const calendarElement = document.getElementById('calendar');
     generateWeekView(calendarElement, currentStartIndex);
 }
