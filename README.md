@@ -19,6 +19,7 @@ then run 'docker compose up' to begin the projects specific container
 then, when done, make sure to run 'docker compose down -v' to make sure the containers close and the database closes along with it
 
 # Directory Structure
+```bash
 ├── MilestoneSubmissions
 │   ├── lab_11_UAT_doc.pdf
 │   ├── Lab 9.pdf
@@ -65,6 +66,7 @@ then, when done, make sure to run 'docker compose down -v' to make sure the cont
 │       └── server.spec.js
 ├── README.md
 └── TeamMeetingLogs
+```
     ├── MeetingLog(3_20_2024).docx
     ├── MeetingLog(4_1_2024).docx
     ├── MeetingLog(4_15_2024).docx
