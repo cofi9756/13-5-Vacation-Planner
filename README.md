@@ -22,11 +22,12 @@ then, when done, make sure to run 'docker compose down -v' to make sure the cont
 ```bash
 ├── MilestoneSubmissions
 │   ├── lab_11_UAT_doc.pdf
+│   ├── Lab13.docx
 │   ├── Lab 9.pdf
-│   └── Placeholder.txt
 ├── ProjectSourceCode
 │   ├── docker-compose.yaml
 │   ├── package.json
+│   ├── package-lock.json
 │   ├── ProjectSourceCode
 │   │   └── init_data
 │   ├── src
@@ -66,9 +67,9 @@ then, when done, make sure to run 'docker compose down -v' to make sure the cont
 │       └── server.spec.js
 ├── README.md
 └── TeamMeetingLogs
-```
     ├── MeetingLog(3_20_2024).docx
     ├── MeetingLog(4_1_2024).docx
     ├── MeetingLog(4_15_2024).docx
     ├── MeetingLog(4_22_2024).docx
     ├── MeetingLog(4_8_2024).docx
+```
