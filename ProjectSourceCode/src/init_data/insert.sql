@@ -220,7 +220,6 @@ INSERT INTO cities (countryid, city_name, city_desc, budget, preferences) VALUES
 (1, 'Greensboro', 'Gate City.', 2400, 'city'),
 (1, 'Baton Rouge', 'Red Stick.', 2400, 'city'),
 (1, 'El Paso', 'Sun City.', 2300, 'city, mountains'),
-(1, 'Detroit', 'Motor City.', 2200, 'city, historicSites'),
 (1, 'Madison', 'City of four lakes.', 2400, 'city'),
 (1, 'Lubbock', 'Hub City.', 2300, 'city'),
 (1, 'Jersey City', 'Sixth borough.', 1500, 'city'),
