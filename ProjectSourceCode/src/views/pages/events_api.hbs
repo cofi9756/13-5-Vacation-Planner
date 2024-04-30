@@ -1,41 +1,5 @@
 {{!-- {{> message}}
 <body>
-    <div class="container mt-5">
-        <h2>Events</h2>
-        {{#each events}}
-            <div class="row">
-                <div class="card">
-                    
-                </div>
-            </div>
-    </div>
-</body> --}}
-{{> message}}
-{{!-- <body>
-    <div class="container mt-5">
-        <h2>Discover Events</h2>
-            <div class="row">
-                {{#each events}}
-                    <div class="col-md-4 mb-4">
-                        <div class="card">
-                            {{#if this.images}}
-                                <img src="{{this.images.url}}" class="card-img-top" alt="{{this.name}}">
-                            {{else}}
-                                <img src="/default/image" class="card-img-top" alt="Default Image">
-                            {{/if}}
-                            <div class="card-body">
-                                <h5 class="card-title">{{this.name}}</h5>
-                                <p class="card-text">{{this.dates.start.localDate}} at {{this.dates.start.localTime}}</p>
-                                <a href="{{this._links.self.href}}" class="btn btn-primary" target="_blank">Book Now</a>
-                            </div>
-                        </div>
-                    </div>
-                {{/each}}
-            </div>
-    </div>
-</body> --}}
-
-<body>
   <div class="container mt-5">
     <h2>Discover Events</h2>
     <div class="row">
@@ -56,3 +20,57 @@
     </div>
   </div>
 </body>
+
+
+<body>
+  <div class="container mt-5">
+    <h4>Events for you in {{destination}}:</h4>
+    {{#each events |event|}}
+    <div class="row">
+      <div class="card" id="eventCard">
+        <div class="col-md-4">
+          <img src="{{event.image}}" class="img-fluid rounded-start" alt="{{event.name}}">
+        </div>
+        <div class="col-md-8">
+          <div class="card-body">
+            <h5 class="card-title">{{event.name}}</h5>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</body> --}}
+
+{{> message}}
+<div class="container mt-4">
+  <h3>Suggested events for you to attend in {{destination}}:</h3>
+  {{#each events}}
+    <div class="card mb-3">
+      
+      <div class="row g-0">
+        <div class="col-md-4">
+          <img src="{{this.image}}" class="img-fluid rounded-start" alt="{{this.name}}">
+        </div>
+        <div class="col-md-8">
+          <div class="card-body">
+            <h5 class="card-title">{{this.name}}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">{{this.category}} at {{this.place}}</h6>
+            <p class="card-text"><small>{{this.start}} to {{this.end}}</small></p>
+            <p class="card-text">{{this.description}}</p>
+            <p class="card-text">Price Range: ${{this.minPrice}} - ${{this.maxPrice}}</p>
+            <a href="{{this.url}}" class="btn btn-primary">Book Now</a>
+            {{!-- <form action="/add_event_to_itinerary" method="post">
+              <input type="hidden" name="name" value="{{this.name}}">
+              <input type="hidden" name="start" value="{{this.start}}">
+              <input type="hidden" name="end" value="{{this.end}}">
+              <input type="hidden" name="description" value="{{this.description}}">
+              <input type="hidden" name="url" value="{{this.url}}">
+              <button type="submit" class="btn btn-secondary">Add Event to Itinerary</button>
+            </form> --}}
+          </div>
+        </div>
+      </div>
+    </div>
+  {{/each}}
+</div>

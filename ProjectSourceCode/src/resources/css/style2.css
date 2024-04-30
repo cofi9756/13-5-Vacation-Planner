@@ -1,0 +1,13 @@
+.container {
+    display: flex;
+}
+
+.left-content {
+    flex: 1; /* Take up half of the container width */
+    background-color: #f0f0f0; /* Example background color */
+}
+
+.right-content {
+    flex: 1; /* Take up half of the container width */
+    background-color: #e0e0e0; /* Example background color */
+}

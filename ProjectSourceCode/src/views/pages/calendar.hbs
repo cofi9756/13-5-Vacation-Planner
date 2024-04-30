@@ -1,33 +1,289 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>My Calendar</title>
-    <!-- Add stylesheets and FullCalendar library -->
-    <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css' rel='stylesheet' />
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js'></script>
+    <title>Calendar</title>
+    <!-- Bootstrap CSS library -->
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+    crossorigin="anonymous"
+    />
+
+    <!-- Bootstrap JS library -->
+    <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"
+    ></script>
+
+    <!-- Bootstrap icons library -->
+    <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"
+    />
+    <style>
+        body {
+            height: 100%;
+            background-color: #f2f2f2;
+        }
+
+        .event:hover {
+            cursor: pointer;
+        }
+
+        .hidden {
+            visibility: hidden;
+            height: 0;
+        }
+
+        #calendar {
+            height: 100vh;
+        }
+        .saved-event {
+            margin-top: 5px;
+            padding: 5px;
+            border: 1px solid #ccc; /* Light grey border */
+            cursor: pointer;
+        }
+    </style>
 </head>
-<body>
-    <div id='calendar'></div>
-    <script>
-        $(document).ready(function() {
-            $('#calendar').fullCalendar({
-                header: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'month,agendaWeek,agendaDay'
-                },
-                editable: true,
-                events: '/fetch-events', // URL to get events from your server
-                dayClick: function(date, jsEvent, view) {
-                    // Function to handle day click, e.g., open a modal to add a new event
-                },
-                eventClick: function(calEvent, jsEvent, view) {
-                    // Function to handle event click, e.g., edit or delete event
-                }
-            });
-        });
+
+<body onload="initializeCalendar()" style="font-family: 'Arial', sans-serif; color: #333; padding: 20px; background-color: #C8D7D6;">
+    <div style="text-align: center; margin-top: 10px;">
+        <h1 style="color: #555; font-size: 3em; margin-top: 10px;">Trip to {{tripInfo.destination}}</h1>
+        <h2 style="color: #555; font-size: 1.5em;">From <strong>{{tripInfo.startDate}}</strong> to <strong>{{tripInfo.endDate}}</strong></h2>
+    </div>
+
+    <!-- Button outside the container, on the right -->
+    <div class="position-absolute end-1 mt-2" style="right: 50px; top: 100;">
+        <button id="prevButton" class="btn btn-primary btn-sm" style="display: none;">Previous 7 Days</button>
+        <button id="nextButton" class="btn btn-primary btn-sm" style="display: none;">Next 7 Days</button>
+    </div>
+    
+    <!-- Calendar container -->
+    <div class="container">
+        <div id="calendar" class="row"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" tabindex="-1" id="event-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalLabel">Create Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm">
+                        <!-- Event Name -->
+                        <div class="mb-3">
+                            <label for="event_name" class="form-label">Event Name</label>
+                            <input type="text" class="form-control" id="event_name" required>
+                        </div>
+
+                        <!-- Event Description -->
+                        <div class="mb-3">
+                            <label for="event_description" class="form-label">Description</label>
+                            <textarea class="form-control" id="event_description" rows="3"></textarea>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Event</button>
+                        <button type="button" class="btn btn-danger" id="deleteEvent">Delete Event</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional script tags for JavaScript should go here -->
+</body>
+
+            
+    <script type="text/javascript">
+
+        // Correctly initialize the totalDays based on tripInfo
+        const startDate = new Date('{{tripInfo.startDate}}');
+        const endDate = new Date('{{tripInfo.endDate}}');
+        let currentStartIndex = 0; // Global variable to keep track of the current page
+
+
+    function createBootstrapCard(date) {
+    let card = document.createElement('div');
+    card.className = 'col card my-2';
+    card.id = `card-${date.toISOString().split('T')[0]}`;
+
+    let dayOfWeekString = date.toLocaleDateString(undefined, { weekday: 'long' });
+    let dateString = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
+    let title = document.createElement('div');
+    title.className = 'card-title';
+    title.innerHTML = `<strong>${dayOfWeekString}</strong><br>${dateString}`;
+    card.appendChild(title);
+
+    // Existing button to add trip info
+    let addInfoButton = document.createElement('button');
+    addInfoButton.className = 'btn btn-primary btn-sm';
+    addInfoButton.textContent = 'Add Trip Info';
+    addInfoButton.onclick = function() {
+        openEventModal(date);
+    };
+    card.appendChild(addInfoButton);
+
+    // New button to redirect to select event type
+    let addEventButton = document.createElement('button');
+    addEventButton.className = 'btn btn-secondary btn-sm';
+    addEventButton.textContent = 'Find Events';
+    addEventButton.style.marginLeft = '10px'; // Add some space between buttons
+    addEventButton.onclick = function() {
+        window.location.href = `/select_event_type?date=${encodeURIComponent(date.toISOString())}`;
+    };
+    card.appendChild(addEventButton);
+
+    let eventsDiv = createEventDiv();
+    card.appendChild(eventsDiv);
+
+    return card;
+}
+
+    function createEventDiv() {
+    // Create events div
+    let eventsDiv = document.createElement('div');
+    eventsDiv.classList.add('event-container');
+    return eventsDiv;
+
+    }
+
+    function generateWeekView(calendarElement, startIndex) {
+        calendarElement.innerHTML = ''; // Clear any existing elements
+
+        // Get the user's local timezone offset and convert it to milliseconds
+        let timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
+
+        // Adjust startDate by the timezone offset
+        let adjustedStartDate = new Date(new Date(startDate).getTime() + timezoneOffset);
+
+        // Calculate the total number of days in the trip
+        const totalDays = Math.ceil((new Date(endDate) - new Date(adjustedStartDate)) / (1000 * 60 * 60 * 24)) + 1;
+
+        // Loop over each day within the 7-day window, adjusting each date by the timezone offset
+        for (let i = 0; i < 7; i++) {
+            let date = new Date(adjustedStartDate);
+            date.setDate(date.getDate() + startIndex + i);
+
+            // Adjust the date by the timezone offset
+            let adjustedDate = new Date(date.getTime() + timezoneOffset);
+
+            // Check if the adjusted date is within the trip range
+            if (adjustedDate <= new Date(endDate)) {
+                const card = createBootstrapCard(adjustedDate);
+                calendarElement.appendChild(card);
+                updateEventDisplay(adjustedDate); // Load events for this date
+            }
+        }
+
+    // Show or hide the "Previous" button
+    prevButton.style.display = startIndex > 0 ? 'block' : 'none';
+    prevButton.onclick = function() {
+        currentStartIndex = Math.max(startIndex - 7, 0);
+        generateWeekView(calendarElement, currentStartIndex);
+    };
+
+    // Show or hide the "Next" button
+    nextButton.style.display = (startIndex + 7 < totalDays) ? 'block' : 'none';
+    nextButton.onclick = function() {
+        currentStartIndex = Math.min(startIndex + 7, totalDays - (totalDays % 7));
+        generateWeekView(calendarElement, currentStartIndex);
+    };
+}
+
+    function initializeCalendar() {
+    const calendarElement = document.getElementById('calendar');
+    generateWeekView(calendarElement, currentStartIndex);
+}
+    
+    function openEventModal(date, eventIndex = null) {
+    const eventModal = new bootstrap.Modal(document.getElementById('event-modal'));
+    const eventNameInput = document.getElementById("event_name");
+    const eventDescriptionInput = document.getElementById("event_description");
+    const dateStr = date.toISOString().split('T')[0];
+    const events = JSON.parse(localStorage.getItem('events')) || {};
+    const currentEvent = events[dateStr] ? events[dateStr][eventIndex] : null;
+
+    document.getElementById("eventModalLabel").textContent = currentEvent ? `Edit Info on ${date.toLocaleDateString()}` : `Add Info on ${date.toLocaleDateString()}`;
+    eventNameInput.value = currentEvent ? currentEvent.name : '';
+    eventDescriptionInput.value = currentEvent ? currentEvent.description : '';
+
+    document.getElementById("eventForm").onsubmit = function(e) {
+        e.preventDefault();
+        const updatedName = eventNameInput.value;
+        const updatedDescription = eventDescriptionInput.value;
+
+        if (currentEvent) {
+            events[dateStr][eventIndex] = { name: updatedName, description: updatedDescription };
+        } else {
+            events[dateStr] = events[dateStr] || [];
+            events[dateStr].push({ name: updatedName, description: updatedDescription });
+        }
+
+        localStorage.setItem('events', JSON.stringify(events));
+        updateEventDisplay(date);
+        eventModal.hide();
+    };
+
+    document.getElementById("deleteEvent").addEventListener('click', function() {
+        if (eventIndex !== null) {
+            events[dateStr].splice(eventIndex, 1);
+            if (events[dateStr].length === 0) delete events[dateStr];  // Remove the key if no events left
+            localStorage.setItem('events', JSON.stringify(events));
+            updateEventDisplay(date);
+            eventModal.hide();
+        }
+    });
+
+    eventModal.show();
+}
+
+    function saveEvent(date, name, description) {
+    let events = JSON.parse(localStorage.getItem('events')) || {};
+    const dateKey = date.toISOString().split('T')[0];
+    // Ensure there is always an array to push to
+    if (!Array.isArray(events[dateKey])) {
+        events[dateKey] = [];
+    }
+    events[dateKey].push({ name, description });
+    localStorage.setItem('events', JSON.stringify(events));
+    updateEventDisplay(date);
+}
+
+    function updateEventDisplay(date) {
+    const dateStr = date.toISOString().split('T')[0];
+    const events = JSON.parse(localStorage.getItem('events')) || {};
+    const dayEvents = events[dateStr] || [];
+    const card = document.querySelector(`#card-${dateStr} .event-container`);
+
+    card.innerHTML = ''; // Clear previous entries
+
+    dayEvents.forEach((event, index) => {
+        let eventInfo = document.createElement("div");
+        eventInfo.className = "saved-event";
+        eventInfo.innerHTML = `<strong>${event.name}:</strong> ${event.description}`; // Event name in bold
+        eventInfo.style.border = "1px solid black"; // Outline for visibility
+        eventInfo.onclick = () => openEventModal(date, index); // Pass index for editing
+        card.appendChild(eventInfo);
+    });
+}
+
+    window.addEventListener('beforeunload', function () {
+    document.getElementById("event_name").value = '';
+    document.getElementById("event_description").value = '';
+    //localStorage.removeItem('events');
+});
+
     </script>
 </body>
+
 </html>
