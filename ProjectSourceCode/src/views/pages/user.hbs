@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<body style="justify-content: center; align-items: center; height: 100vh;">
+<body style="justify-content: center; align-items: center; height: 100vh; background-color: #C8D7D6">
     <hr>
     <div class="container" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; width: 300px;">
         <h1 style="color: #333;">User Profile</h1>
@@ -14,7 +14,9 @@
         <p style="color: #666; line-height: 1.6;"><strong>First Name:</strong> {{user.first_name}}</p>
         <p style="color: #666; line-height: 1.6;"><strong>Last Name:</strong> {{user.last_name}}</p>
         <p style="color: #666; line-height: 1.6;"><strong>Date of Birth:</strong> <span id="dob">{{user.date_of_birth}}</span></p>
-        <button onclick="logout()" style="background-color: #4CAF50; color: white; padding: 10px 20px; margin: 10px 0; border: none; border-radius: 5px; cursor: pointer;" onmouseover="this.style.backgroundColor='#45a049'" onmouseout="this.style.backgroundColor='#4CAF50'">Logout</button>
+        <form action="/logout" method="get">
+            <button type="submit" style="background-color: red; color: white; border: none; padding: 10px 20px; cursor: pointer;">Logout</button>
+        </form>
     </div>
     <hr>
     <script>

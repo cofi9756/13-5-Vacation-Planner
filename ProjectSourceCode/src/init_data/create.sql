@@ -20,7 +20,8 @@ CREATE TABLE cities (
     countryid INT NOT NULL,
     city_name VARCHAR(100) NOT NULL,
     city_desc VARCHAR(150) NOT NULL,
-    preference_data VARCHAR(150),
+    budget INT NOT NULL,
+    preferences VARCHAR(150),
     FOREIGN KEY (countryid) REFERENCES countries(countryid)
 );
 
@@ -58,4 +59,12 @@ CREATE TABLE saved_events (
     PRIMARY KEY (userid, eventid),
     FOREIGN KEY (userid) REFERENCES users(userid),
     FOREIGN KEY (eventid) REFERENCES events(eventid)
+);
+
+--Temp table to get recommendation page working
+CREATE TABLE locations (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    budget_max INT NOT NULL,
+    preferences VARCHAR(255) NOT NULL
 );

@@ -1,17 +1,35 @@
-<nav style="background-color: #ffffff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 10px 20px;">
+<nav style="background-color: #050505; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 10px 20px;">
   <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
     <div style="flex-grow: 1; display: flex; justify-content: center;">
-      <a href="/" style="font-size: 24px; font-weight: bold; color: #333333; text-decoration: none;">Nomad</a>
+      <a href="/" style="font-size: 24px; font-weight: bold; color: #FDFDFD; text-decoration: none;">Nomad</a>
     </div>
     <div style="flex-grow: 1; display: flex; justify-content: flex-start;">
-      <a href="../home" style="margin-right: 20px; font-size: 18px; color: #333; text-decoration: none;">Home</a>
-      <a href="../search" style="margin-right: 20px; font-size: 18px; color: #333; text-decoration: none;">Search</a>
-      <a href="../events" style="font-size: 18px; color: #333; text-decoration: none;">Events</a>
+      <a href="../home" style="margin-right: 20px; font-size: 18px; color: #FDFDFD; text-decoration: none;">Home</a>
+      <a href="../calendar" style="margin-right: 20px; font-size: 18px; color: #FDFDFD; text-decoration: none;">Itinerary</a>
+      <a href="../select_event_type" style="font-size: 18px; color: #FDFDFD; text-decoration: none;">Events</a>
     </div>
     <div style="flex-grow: 1; display: flex; justify-content: flex-end;">
-      <div style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #dddddd;">
-        <a href="../user"><img src="/path/to/user-icon.png" alt="User" style="width: 100%; height: 100%; border-radius: 50%;"></a>
-      </div>
+      {{!-- <div style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #dddddd;"> --}}
+        <a href="../user"><i class="fas fa-user fa-2x" style="color: white;"></i></a>
+      {{!-- </div> --}}
     </div>
   </div>
 </nav>
+{{!-- 
+<nav style="background-color: #050505; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 10px 20px; position: fixed; top: 0; width: 100%; z-index: 1000;">
+  <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+    <div style="flex-grow: 1; display: flex; justify-content: center;">
+      <a href="/" style="font-size: 24px; font-weight: bold; color: #FDFDFD; text-decoration: none;">Nomad</a>
+    </div>
+    <div style="flex-grow: 1; display: flex; justify-content: flex-start;">
+      <a href="../home" style="margin-right: 20px; font-size: 18px; color: #FDFDFD; text-decoration: none;">Home</a>
+      <a href="../calendar" style="margin-right: 20px; font-size: 18px; color: #FDFDFD; text-decoration: none;">Itinerary</a>
+      <a href="../select_event_type" style="font-size: 18px; color: #FDFDFD; text-decoration: none;">Events</a>
+    </div>
+    <div style="flex-grow: 1; display: flex; justify-content: flex-end;">
+      <div style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #dddddd;">
+        <a href="../user"><i class="fas fa-user fa-2x" style="color: white;"></i></a>
+      </div>
+    </div>
+  </div>
+</nav> --}}
