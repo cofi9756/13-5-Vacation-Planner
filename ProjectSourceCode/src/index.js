@@ -503,8 +503,11 @@ app.use(auth);
 
 app.get('/select_event_type', (req, res) => {
   const { date } = req.query; // Retrieve date from query parameters
-  if (!req.session.user || !req.session.tripInfo) {
+  if (!req.session.user) {
     return res.redirect('/login'); // Redirect if no session or trip info
+  }
+  else if (!session_tripInfo.destination || !session_tripInfo.startDate || !session_tripInfo.endDate) {
+    return res.render('pages/home',{user: req.session.user, message: 'Input trip information to see events', alertType: 'info'});
   }
 
   // Assuming session_tripInfo is part of session object
@@ -620,8 +623,11 @@ app.get('/logout', (req, res) => {
   }
 });
 app.get('/calendar', (req, res) => {
-  if (!req.session.user || !req.session.tripInfo) {
+  if (!req.session.user) {
       return res.redirect('/login'); // Redirect if no session or trip info
+  }
+  else if (!session_tripInfo.destination || !session_tripInfo.startDate || !session_tripInfo.endDate) {
+      return res.render('pages/home',{user: req.session.user, message: 'Input trip information to see events', alertType: 'info'});
   }
 
   // Render calendar page with session data
