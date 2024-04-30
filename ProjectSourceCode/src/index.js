@@ -226,6 +226,185 @@ app.post('/register', async (req, res) => {
   }
 });
 
+
+app.get('/events', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login'); // Redirect to login if not authenticated
+  }
+
+  const saved = req.query.saved;
+  
+  db.any(saved ? saved_events : all_events, [user.userid, destination, budget])
+  .then(events => {
+      console.log(events);
+      res.render('pages/events', {
+        events,
+        action: req.query.saved ? 'delete' : 'add',
+      });
+    })
+    .catch(err => {
+      console.log("/events error");
+      res.render('pages/events', {
+        events: [],
+        error: true,
+      });
+    });
+});
+
+app.post('/events/add', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login'); // Redirect to login if not authenticated
+  }
+  const eventid = parseInt(req.body.eventid);
+  const query = 'INSERT INTO saved_events (userid, eventid) VALUES ($1, $2);';
+  
+  console.log("events add");
+  temp_userid = req.session.user.userid;
+  temp_destination = req.session.session_destination.destination;
+  temp_budget = req.session.session_budget.budget;
+
+  db.tx(async t => {
+    await t.none(query, [temp_userid, eventid]);
+    return t.any(all_events, [temp_userid, temp_destination, temp_budget]);
+  })
+  .then(events => {
+    console.log(events);
+    res.render('pages/events', {
+      userid: temp_userid,
+      destination: temp_destination,
+      budget: temp_budget,
+      events,
+      message: `Successfully added event!`,
+    });
+  })
+  .catch(err => {
+    console.log("/events/add error");
+    res.render('pages/events', {
+      userid: temp_userid,
+      destination: temp_destination,
+      budget: temp_budget,
+      events: [],
+      error: true,
+    });
+  });
+});
+
+app.get('/saved_events', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login'); // Redirect to login if not authenticated
+  }
+  const query = `
+  SELECT 
+  ev.eventid,
+  event_name, 
+  event_desc, 
+  cost,
+  to_char(event_date, \'DD Month YYYY\') AS event_date, 
+  to_char(event_time, \'HH24:MI\') AS event_time, 
+  country_name, 
+  city_name, 
+  image_link, 
+  image_desc,
+  to_char(date_saved, \'DD Month YYYY\') AS date_saved
+  FROM saved_events se JOIN events ev ON ev.eventid = se.eventid
+  JOIN cities ci ON ci.cityid = ev.cityid
+  JOIN countries co ON co.countryid = ci.countryid
+  JOIN images im ON ev.eventid = im.eventid
+  WHERE se.userid = $1;`;
+
+  temp_user = req.session.user;
+
+  db.any(query, [req.session.user.userid])
+  .then(events => {
+    console.log(events);
+    res.render('pages/saved_events', {
+      email: req.session.user.email,
+      user: temp_user,
+      events,
+      first_name: req.session.user.first_name,
+    });
+  })
+  .catch(err => {
+    res.render('pages/saved_events', {
+      email: req.session.user.email,
+      user: temp_user,
+      events: [],
+      first_name: user.first_name,
+    });
+  });
+});
+
+//currently non-functional, html does not give eventid
+app.get('/deleteSaved_event', (req, res) => {
+  const eventid = parseInt(req.body.eventid);
+  const Delquery = `DELETE FROM saved_events WHERE userid = $1 AND eventid = $2;`;
+  const Selquery = `
+  SELECT 
+  ev.eventid,
+  event_name, 
+  event_desc, 
+  to_char(event_date, \'DD Month YYYY\') AS event_date, 
+  to_char(event_time, \'HH24:MI\') AS event_time, 
+  country_name, 
+  city_name, 
+  image_link, 
+  image_desc,
+  to_char(date_saved, \'DD Month YYYY\') AS date_saved
+  FROM users us JOIN saved_events se ON us.userid = se.userid
+  JOIN events ev ON ev.eventid = se.eventid
+  JOIN countries co ON co.countryid = ev.countryid
+  JOIN cities ci ON ci.countryid = co.countryid
+  JOIN images im ON ev.eventid = im.eventid
+  WHERE se.userid = $1;`;
+
+  db.tx(async t => {
+    await t.none(Delquery, [user.userid, eventid]);
+    return t.any(Selquery, [user.userid]);
+  })
+  .then(events => {
+    console.log(events);
+    res.render('pages/saved_events', {
+      email: user.email,
+      events,
+      first_name: user.first_name,
+    });
+  })
+  .catch(err => {
+    res.render('pages/saved_events', {
+      email: user.email,
+      events: [],
+      first_name: user.first_name,
+    });
+  });
+});
+
+app.get('/search', (req, res) => {
+  res.render('pages/search');
+});
+
+app.post('/search', async (req, res) => {
+  const { location_name } = req.body; // Assuming the front-end sends 'location_name'
+  if (!location_name) {
+      return res.status(400).json({ error: "Location name is required for search." });
+  }
+
+  try {
+      // Query the locations table to find matching locations
+      const results = await db.any('SELECT * FROM locations WHERE location_name ILIKE $1', [`%${location_name}%`]);
+      
+      if (results.length === 0) {
+          // No results found
+          return res.status(404).json({ message: "No locations found matching your query." });
+      }
+
+      // Send back the found locations
+      res.json({ locations: results });
+  } catch (error) {
+      console.error('Error during location search:', error);
+      res.status(500).json({ error: "An error occurred while searching for locations." });
+  }
+});
+
 app.get('/home', (req, res) => {
   if (req.session.user) {
       res.render('pages/home', {
@@ -281,7 +460,7 @@ app.post('/trip', (req, res) => {
   if (!Array.isArray(tripPreferences)) {
       tripPreferences = [tripPreferences]; // Wrap it in an array if it's not
   }
-  // req.session.tripInfo = { destination, budget, startDate, endDate, tripPreferences };
+  req.session.tripInfo = { destination, budget, startDate, endDate, tripPreferences };
   const userid = req.session.user.userid;
   const preferencesPattern = tripPreferences.join('|'); // Now safe to use join
 
@@ -306,7 +485,7 @@ app.post('/trip', (req, res) => {
           });
   } else {
       // Handle the request to plan a trip with a known destination
-      // res.redirect('/calendar');
+      res.redirect('/calendar');
       return res.render('pages/search_api', {
         destination: session_tripInfo.destination,
       });
@@ -383,8 +562,8 @@ app.get('/search_events', async (req, res) => {
       },
       params: {
         apikey: process.env.API_KEY,
-        // startDateTime: startDate,
-        // endDateTime: endDate,
+        startDateTime: startDate,
+        endDateTime: endDate,
         city: destination,  // Try as a string if the array format causes issues
         classificationName: categoryString,
         size: 30,
